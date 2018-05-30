@@ -1,4 +1,4 @@
-<h1 align = "center">EOSDACRandom</h1>
+# EOSDACRandom
 A random number generator smart contract.
 
 ### participator
