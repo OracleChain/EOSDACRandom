@@ -1,4 +1,4 @@
-#include "edtrandom.hpp"
+#include "eosdacrandom.hpp"
 #include <eosiolib/system.h>
 #include "../EOSDACVote/eosdacvote.hpp"
 #include "../EOSDACToken/eosdactoken.hpp"
