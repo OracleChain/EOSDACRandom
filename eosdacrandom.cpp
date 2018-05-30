@@ -137,6 +137,7 @@ int64_t eosdacrandom::random()
     }
 
     srand48(seed);
-
     return rand();
 }
+
+EOSIO_ABI( eosdacrandom, (setsize) (sendseed) (sendhash) (getrandom) )
