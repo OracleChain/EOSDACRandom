@@ -1,9 +1,5 @@
-# EOSDACRandom
+<h1 align = "center">EOSDACRandom</h1>
 A random number generator smart contract.
-
-----
-
-<h1 align = "center">random contract</h1>
 
 ### participator
 1. random contract (aka contract)
