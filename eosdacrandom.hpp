@@ -37,11 +37,11 @@ public:
     virtual void getrandom(int64_t number) = 0;
 };
 
-class edtrandom : public eosio::contract
+class eosdacrandom : public eosio::contract
 {
 public:
-    edtrandom(account_name name);
-    ~edtrandom();
+    eosdacrandom(account_name name);
+    ~eosdacrandom();
 
     void setsize(uint64_t size);
     void sendseed(name owner, int64_t seed, string symbol);

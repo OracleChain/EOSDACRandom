@@ -1,11 +1,11 @@
 #include "edtrandom.hpp"
 #include <eosiolib/system.h>
-#include "../EOSDACVote/edtmarket.hpp"
+#include "../EOSDACVote/eosdacvote.hpp"
 #include "../EOSDACToken/eosdactoken.hpp"
 
 using namespace eosio;
 
-edtrandom::edtrandom(account_name name)
+eosdacrandom::eosdacrandom(account_name name)
         : contract(name),
           _self(name),
           _seeds(_self, name),
@@ -14,19 +14,19 @@ edtrandom::edtrandom(account_name name)
 
 }
 
-edtrandom::~edtrandom()
+eosdacrandom::~eosdacrandom()
 {
 
 }
 
-void edtrandom::setsize(uint64_t size)
+void eosdacrandom::setsize(uint64_t size)
 {
     require_auth(_self);
     // if _seeds.size() == _seed_size, do not allowed to modify it.
     _seed_size = size;
 }
 
-void edtrandom::sendseed(name owner, int64_t seed, string symbol)
+void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 {
     eosio_assert(is_account(owner), "Invalid account");
     eosio_assert(_seeds.size() == _seed_size, "some seed hash has not been set");
@@ -55,7 +55,7 @@ void edtrandom::sendseed(name owner, int64_t seed, string symbol)
 
     if (s.hah != h) {
         print("seed not match hash");
-        SEND_INLINE_ACTION( EOSDACVote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
+        SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
         for (auto itr = _seeds.cbegin(); itr != _seeds.cend(); ) {
             itr = _seeds.erase(itr);
         }
@@ -83,7 +83,7 @@ void edtrandom::sendseed(name owner, int64_t seed, string symbol)
     }
 }
 
-void edtrandom::sendhash(name owner, string hash, string symbol)
+void eosdacrandom::sendhash(name owner, string hash, string symbol)
 {
     eosio_assert(is_account(owner), "Invalid account");
     eosio_assert(_seeds.size() < _seed_size, "seeds is full");
@@ -106,7 +106,7 @@ void edtrandom::sendhash(name owner, string hash, string symbol)
 
 }
 
-void edtrandom::getrandom(name owner)
+void eosdacrandom::getrandom(name owner)
 {
     eosio_assert(is_account(owner));
 
@@ -125,7 +125,7 @@ void edtrandom::getrandom(name owner)
     }
 }
 
-int64_t edtrandom::random()
+int64_t eosdacrandom::random()
 {
     // use _seeds to generate random number
     eosio_assert(_seeds.size() == _seed_size, "seed is not full");
