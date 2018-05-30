@@ -7,8 +7,8 @@ using namespace eosio;
 
 eosdacrandom::eosdacrandom(account_name name)
         : contract(name),
-          _self(name),
           _seeds(_self, name),
+          _geters(_self, name),
           _seed_target_size(3),
           _seeds_count(0),
           _seeds_match(0)
@@ -32,10 +32,10 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 {
     eosio_assert(is_account(owner), "Invalid account");
     eosio_assert(_seeds_count == _seed_target_size, "some seed hash has not been set");
-    eosio::asset fromBalance = eosdactoken(tokenContract).get_balance(owner, string_to_name(symbol.c_str()));
+    eosio::asset fromBalance = eosdactoken(N(octoneos)).get_balance(owner, string_to_name(symbol.c_str()));
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
-    eosio::asset selfBalance = eosdactoken(tokenContract).get_balance(_self, string_to_name(symbol.c_str()));
+    eosio::asset selfBalance = eosdactoken(N(octoneos)).get_balance(_self, string_to_name(symbol.c_str()));
     eosio_assert(selfBalance.amount > 0, "contract account has not enough OCT to do it");
 
     require_auth(owner);
@@ -56,7 +56,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
     eosio_assert(s != _seeds.end(), "account not found");
     eosio_assert(s->seed != seed, "you have already send seed");
 
-    if (s.hah != h) {
+    if (s->hash != h) {
         print("seed not match hash");
         SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
         for (auto itr = _seeds.cbegin(); itr != _seeds.cend(); ) {
@@ -93,7 +93,7 @@ void eosdacrandom::sendhash(name owner, string hash, string symbol)
 {
     eosio_assert(is_account(owner), "Invalid account");
     eosio_assert(_seeds_count < _seed_target_size, "seeds is full");
-    eosio::asset fromBalance = eosdactoken(tokenContract).get_balance(owner, string_to_name(symbol.c_str()));
+    eosio::asset fromBalance = eosdactoken(N(octoneos)).get_balance(owner, string_to_name(symbol.c_str()));
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
     required_auth(owner);
