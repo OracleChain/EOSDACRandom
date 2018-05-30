@@ -19,6 +19,7 @@ struct seed_info
 
 typedef eosio::multi_index<N(seeds), seed_info> seed_table;
 
+// @abi table geter_info
 struct geter_info
 {
     name owner;
