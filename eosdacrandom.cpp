@@ -110,7 +110,6 @@ void eosdacrandom::sendhash(name owner, string hash, string symbol)
             a.hash = hash;
         });
     }
-
 }
 
 void eosdacrandom::getrandom(name owner)
