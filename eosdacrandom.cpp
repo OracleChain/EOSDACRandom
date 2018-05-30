@@ -1,5 +1,6 @@
 #include "eosdacrandom.hpp"
 #include <eosiolib/system.h>
+#include <eosiolib/stdlib.hpp>
 #include "../EOSDACVote/eosdacvote.hpp"
 #include "../EOSDACToken/eosdactoken.hpp"
 
@@ -58,7 +59,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 
     if (s->hash != h) {
         print("seed not match hash");
-        SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
+        //SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
         for (auto itr = _seeds.cbegin(); itr != _seeds.cend(); ) {
             itr = _seeds.erase(itr);
         }
@@ -80,7 +81,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 
         for (auto i = _geters.cbegin(); i != _geters.cend();) {
             if (cur - i->timestamp >= expiraion) {
-                SEND_INLINE_ACTION( i->owner, getrandom, {_self,N(active)}, {num} );
+                //SEND_INLINE_ACTION( i->owner, getrandom, {_self,N(active)}, {num} );
                 i = _geters.erase(i);
             } else {
                 ++i;
@@ -96,7 +97,7 @@ void eosdacrandom::sendhash(name owner, string hash, string symbol)
     eosio::asset fromBalance = eosdactoken(N(octoneos)).get_balance(owner, string_to_name(symbol.c_str()));
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
-    required_auth(owner);
+    require_auth(owner);
 
     auto s = _seeds.find(owner);
     if (s == _seeds.end()) {
@@ -114,7 +115,7 @@ void eosdacrandom::sendhash(name owner, string hash, string symbol)
 
 void eosdacrandom::getrandom(name owner)
 {
-    eosio_assert(is_account(owner));
+    eosio_assert(is_account(owner), "Invalid account");
 
     uint64_t cur = current_time();
 
@@ -136,6 +137,7 @@ int64_t eosdacrandom::random()
     // use _seeds to generate random number
     eosio_assert(_seeds_count == _seed_target_size, "seed is not full");
 
+    // how to generate random number?
     int64_t  seed = 0;
     for (auto it = _seeds.cbegin(); it != _seeds.cend();) {
         seed += it->seed;
@@ -145,8 +147,7 @@ int64_t eosdacrandom::random()
     _seeds_count = 0;
     _seeds_match = 0;
 
-    srand48(seed);
-    return rand();
+    return seed;
 }
 
 bool eosdacrandom::seedsmatch()
