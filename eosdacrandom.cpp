@@ -9,7 +9,9 @@ eosdacrandom::eosdacrandom(account_name name)
         : contract(name),
           _self(name),
           _seeds(_self, name),
-          _seed_size(3)
+          _seed_target_size(3),
+		  _seeds_count(0),
+		  _seeds_match(0)
 {
 
 }
@@ -22,14 +24,14 @@ eosdacrandom::~eosdacrandom()
 void eosdacrandom::setsize(uint64_t size)
 {
     require_auth(_self);
-    // if _seeds.size() == _seed_size, do not allowed to modify it.
-    _seed_size = size;
+	eosio_assert(_seeds_count < _seed_target_size, "seeds full, do not change size now");
+    _seed_target_size = size;
 }
 
 void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 {
     eosio_assert(is_account(owner), "Invalid account");
-    eosio_assert(_seeds.size() == _seed_size, "some seed hash has not been set");
+    eosio_assert(_seeds_count == _seed_target_size, "some seed hash has not been set");
     eosio::asset fromBalance = eosdactoken(tokenContract).get_balance(owner, string_to_name(symbol.c_str()));
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
@@ -52,6 +54,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 
     auto s = _seeds.find(owner);
     eosio_assert(s != _seeds.end(), "account not found");
+	eosio_assert(s->seed != seed, "you have already send seed");
 
     if (s.hah != h) {
         print("seed not match hash");
@@ -59,6 +62,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
         for (auto itr = _seeds.cbegin(); itr != _seeds.cend(); ) {
             itr = _seeds.erase(itr);
         }
+		_seeds_count = 0;
         return;
     }
 
@@ -66,12 +70,14 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
         a.seed = seed;
     });
 
-    int64_t num = random();
-    uint64_t cur = current_time();
-    static int expiraion = 3000; // ms
+	_seeds_match ++;
 
     // if all seeds match
-    if (true) {
+    if (seedsmatch()) {
+		int64_t num = random();
+		uint64_t cur = current_time();
+		static int expiraion = 3000; // ms
+
         for (auto i = _geters.cbegin(); i != _geters.cend();) {
             if (cur - i->timestamp >= expiraion) {
                 SEND_INLINE_ACTION( i->owner, getrandom, {_self,N(active)}, {num} );
@@ -86,7 +92,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 void eosdacrandom::sendhash(name owner, string hash, string symbol)
 {
     eosio_assert(is_account(owner), "Invalid account");
-    eosio_assert(_seeds.size() < _seed_size, "seeds is full");
+    eosio_assert(_seeds_count < _seed_target_size, "seeds is full");
     eosio::asset fromBalance = eosdactoken(tokenContract).get_balance(owner, string_to_name(symbol.c_str()));
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
@@ -97,6 +103,7 @@ void eosdacrandom::sendhash(name owner, string hash, string symbol)
         _seeds.emplace(_self, [&](auto& a){
             a.owner = owner;
             a.hash = hash;
+			_seeds_count++;
         });
     } else {
         _seeds.modify(s, _self, [&](auto& a){
@@ -128,7 +135,7 @@ void eosdacrandom::getrandom(name owner)
 int64_t eosdacrandom::random()
 {
     // use _seeds to generate random number
-    eosio_assert(_seeds.size() == _seed_size, "seed is not full");
+    eosio_assert(_seeds_count == _seed_target_size, "seed is not full");
 
     int64_t  seed = 0;
     for (auto it = _seeds.cbegin(); it != _seeds.cend();) {
@@ -136,8 +143,24 @@ int64_t eosdacrandom::random()
         it = _seeds.erase(it);
     }
 
+	_seeds_count = 0;
+	_seeds_match = 0;
+
     srand48(seed);
     return rand();
+}
+
+bool eosdacrandom::seedsmatch()
+{
+	if (_seeds_count != _seed_target_size) {
+		return false;
+	}
+
+	if (_seeds_count == _seeds_match) {
+		return true;
+	}
+
+	return false;
 }
 
 EOSIO_ABI( eosdacrandom, (setsize) (sendseed) (sendhash) (getrandom) )
