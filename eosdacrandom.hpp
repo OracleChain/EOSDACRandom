@@ -57,6 +57,6 @@ private:
     seed_table _seeds;
     geter_table _geters;
     uint64_t _seed_target_size;
-	uint64_t _seeds_count;
-	uint64_t _seeds_match;
+    uint64_t _seeds_count;
+    uint64_t _seeds_match;
 };

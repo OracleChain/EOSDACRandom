@@ -10,8 +10,8 @@ eosdacrandom::eosdacrandom(account_name name)
           _self(name),
           _seeds(_self, name),
           _seed_target_size(3),
-		  _seeds_count(0),
-		  _seeds_match(0)
+          _seeds_count(0),
+          _seeds_match(0)
 {
 
 }
@@ -24,7 +24,7 @@ eosdacrandom::~eosdacrandom()
 void eosdacrandom::setsize(uint64_t size)
 {
     require_auth(_self);
-	eosio_assert(_seeds_count < _seed_target_size, "seeds full, do not change size now");
+    eosio_assert(_seeds_count < _seed_target_size, "seeds full, do not change size now");
     _seed_target_size = size;
 }
 
@@ -54,7 +54,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 
     auto s = _seeds.find(owner);
     eosio_assert(s != _seeds.end(), "account not found");
-	eosio_assert(s->seed != seed, "you have already send seed");
+    eosio_assert(s->seed != seed, "you have already send seed");
 
     if (s.hah != h) {
         print("seed not match hash");
@@ -70,7 +70,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
         a.seed = seed;
     });
 
-	_seeds_match ++;
+    _seeds_match ++;
 
     // if all seeds match
     if (seedsmatch()) {
@@ -103,7 +103,7 @@ void eosdacrandom::sendhash(name owner, string hash, string symbol)
         _seeds.emplace(_self, [&](auto& a){
             a.owner = owner;
             a.hash = hash;
-			_seeds_count++;
+            _seeds_count++;
         });
     } else {
         _seeds.modify(s, _self, [&](auto& a){
@@ -143,8 +143,8 @@ int64_t eosdacrandom::random()
         it = _seeds.erase(it);
     }
 
-	_seeds_count = 0;
-	_seeds_match = 0;
+    _seeds_count = 0;
+    _seeds_match = 0;
 
     srand48(seed);
     return rand();
@@ -152,15 +152,15 @@ int64_t eosdacrandom::random()
 
 bool eosdacrandom::seedsmatch()
 {
-	if (_seeds_count != _seed_target_size) {
-		return false;
-	}
+    if (_seeds_count != _seed_target_size) {
+        return false;
+    }
 
-	if (_seeds_count == _seeds_match) {
-		return true;
-	}
+    if (_seeds_count == _seeds_match) {
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 EOSIO_ABI( eosdacrandom, (setsize) (sendseed) (sendhash) (getrandom) )
