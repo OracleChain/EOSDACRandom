@@ -44,9 +44,16 @@ public:
     eosdacrandom(account_name name);
     ~eosdacrandom();
 
+    // @abi action
     void setsize(uint64_t size);
+
+    // @abi action
     void sendseed(name owner, int64_t seed, string symbol);
+
+    // @abi action
     void sendhash(name owner, string hash, string symbol);
+
+    // @abi action
     void getrandom(name owner);
 
 private:
