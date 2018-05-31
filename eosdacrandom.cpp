@@ -147,7 +147,19 @@ int64_t eosdacrandom::random()
     _seeds_count = 0;
     _seeds_match = 0;
 
-    return seed;
+    checksum256 cs;
+    char d[255] = { 0 };
+    sprintf(d, "%I64d", seed);
+    sha256(d, strlen(d), &cs);
+
+    return ((cs.hash[0] & 0xFF) |
+            ((cs.hash[1] & 0xFF) << 8) |
+            ((cs.hash[2] & 0xFF) << 16) |
+            ((cs.hash[3] & 0xFF) << 24) |
+            ((cs.hash[4] & 0xFF) << 32) |
+            ((cs.hash[5] & 0xFF) << 40) |
+            ((cs.hash[6] & 0xFF) << 48) |
+            ((cs.hash[7] & 0xFF) << 56));
 }
 
 bool eosdacrandom::seedsmatch()
