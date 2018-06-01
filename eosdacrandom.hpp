@@ -1,6 +1,8 @@
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/crypto.h>
 #include <string>
+#include <vector>
+#include <tuple>
 
 using namespace eosio;
 using namespace std;
@@ -23,12 +25,11 @@ typedef eosio::multi_index<N(seeds), seed_info> seed_table;
 struct geter_info
 {
     name     owner;
-    uint64_t index;
-    uint64_t timestamp;
+    std::vector<std::tuple<uint64_t, uint64_t>> requestinfo;  // index, timestamp
 
     uint64_t primary_key() const { return owner; }
 
-    EOSLIB_SERIALIZE( geter_info, (owner) (index) (timestamp) )
+    EOSLIB_SERIALIZE( geter_info, (owner) (requestinfo) )
 };
 
 typedef  eosio::multi_index<N(geters), geter_info> geter_table;

@@ -1,6 +1,7 @@
 #include "eosdacrandom.hpp"
 #include <eosiolib/system.h>
 #include <eosiolib/stdlib.hpp>
+#include <eosiolib/action.hpp>
 #include "../EOSDACVote/eosdacvote.hpp"
 #include "../EOSDACToken/eosdactoken.hpp"
 
@@ -84,9 +85,18 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
         int64_t num = random();
 		static int expiraion = 3000; // ms
 
-        for (auto i = _geters.cbegin(); i != _geters.cend();) {
-            if (cur - i->timestamp >= expiraion) {
-                //SEND_INLINE_ACTION( i->owner, getrandom, {_self,N(active)}, {i->index, num} );
+        for (auto i = _geters.begin(); i != _geters.end();) {
+            auto& v = i->requestinfo;
+            for (auto j = v.cbegin(); j != v.cend();) {
+                if (cur - std::get<1>(*j) >= expiraion) {
+                    dispatch_inline(i->owner, string_to_name("getrandom"), {permission_level(_self, N(active))}, std::make_tuple(std::get<0>(*j), num));
+                    j = v.erase(j);
+                } else {
+                    ++j;
+                }
+            }
+
+            if (i->requestinfo.size() == 0) {   // if all request clear, erase the account.
                 i = _geters.erase(i);
             } else {
                 ++i;
@@ -123,24 +133,28 @@ void eosdacrandom::regrequest(name owner, uint64_t index)
     eosio_assert(is_account(owner), "Invalid account");
 
     uint64_t cur = current_time();
-
     auto it = _geters.find(owner);
+    auto req = std::make_tuple(index, cur);
     if (it == _geters.end()) {
         _geters.emplace(_self, [&](auto& a){
             a.owner = owner;
-            a.index = index;
-            a.timestamp = cur;
+            a.requestinfo.push_back(req);
         });
     } else {
-        if (it->index == index) {
-            return;
-        } else {
-            _geters.emplace(_self, [&](auto& a){
-                a.owner = owner;
-                a.index = index;
-                a.timestamp = cur;
-            });
-        }
+        _geters.modify(it, _self, [&](auto& a){
+            bool same_idx = false;
+            for (auto ri = a.requestinfo.begin(); ri != a.requestinfo.end(); ++ri) {
+                if (std::get<0>(*ri) == index) {    // if index equals former index.
+                    *ri = req;
+                    same_idx = true;
+                    break;
+                }
+            }
+
+            if (!same_idx) {
+                a.requestinfo.push_back(req);
+            }
+        });
     }
 }
 
