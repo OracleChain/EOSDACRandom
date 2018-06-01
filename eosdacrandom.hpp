@@ -33,11 +33,7 @@ struct geter_info
 
 typedef  eosio::multi_index<N(geters), geter_info> geter_table;
 
-class get_random : public eosio::contract
-{
-public:
-    virtual void getrandom(uint64_t index, int64_t number) {}
-};
+// void getrandom(uint64_t index, int64_t number) {}
 
 class eosdacrandom : public eosio::contract
 {
