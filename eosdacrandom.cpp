@@ -85,23 +85,30 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
         int64_t num = random();
         static int expiraion = 3000; // ms
 
-        for (auto i = _geters.begin(); i != _geters.end();) {
-            auto& v = i->requestinfo;
-            for (auto j = v.cbegin(); j != v.cend();) {
+        for (auto i = _geters.cbegin(); i != _geters.cend(); ++i) {
+            bool dispatched = false;
+            std:vector<std::tuple<uint64_t, uint64_t>> tmp(i->requestinfo);
+            for (auto j = tmp.begin(); j != tmp.end();) {
                 if (cur - std::get<1>(*j) >= expiraion) {
                     dispatch_inline(i->owner, string_to_name("getrandom"),
                                     {permission_level(_self, N(active))},
                                     std::make_tuple(std::get<0>(*j), num));
-                    j = v.erase(j);
+                    j = tmp.erase(j);
+                    dispatched = true;
                 } else {
                     ++j;
                 }
             }
 
-            if (i->requestinfo.size() == 0) {   // if all request clear, erase the account.
-                i = _geters.erase(i);
-            } else {
-                ++i;
+            if (dispatched) {
+                _geters.erase(i);
+
+                if (tmp.size()) {
+                    _geters.emplace(_self, [&](auto& a){
+                        a.owner = owner;
+                        a.requestinfo = tmp;
+                    });
+                }
             }
         }
     }
