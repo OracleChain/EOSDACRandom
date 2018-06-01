@@ -22,13 +22,13 @@ typedef eosio::multi_index<N(seeds), seed_info> seed_table;
 // @abi table geter_info
 struct geter_info
 {
-    name owner;
+    name     owner;
     uint64_t index;
     uint64_t timestamp;
 
     uint64_t primary_key() const { return owner; }
 
-    EOSLIB_SERIALIZE( geter_info, (owner) (timestamp) )
+    EOSLIB_SERIALIZE( geter_info, (owner) (index) (timestamp) )
 };
 
 typedef  eosio::multi_index<N(geters), geter_info> geter_table;
@@ -51,7 +51,7 @@ public:
     void sendhash(name owner, string hash, string symbol);
 
     // @abi action
-    void getrandom(name owner, uint64_t index);
+    void regrequest(name owner, uint64_t index);
 
 private:
     int64_t random();

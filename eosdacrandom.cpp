@@ -118,7 +118,7 @@ void eosdacrandom::sendhash(name owner, string hash, string symbol)
     }
 }
 
-void eosdacrandom::getrandom(name owner, uint64_t index)
+void eosdacrandom::regrequest(name owner, uint64_t index)
 {
     eosio_assert(is_account(owner), "Invalid account");
 
@@ -187,4 +187,4 @@ bool eosdacrandom::seedsmatch()
     return false;
 }
 
-EOSIO_ABI( eosdacrandom, (setsize) (sendseed) (sendhash) (getrandom) )
+EOSIO_ABI( eosdacrandom, (setsize) (sendseed) (sendhash) (regrequest) )
