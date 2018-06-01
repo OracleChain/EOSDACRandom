@@ -132,7 +132,7 @@ void eosdacrandom::getrandom(name owner, uint64_t index)
             a.timestamp = cur;
         });
     } else {
-        if (a.index == index) {
+        if (it->index == index) {
             return;
         } else {
             _geters.emplace(_self, [&](auto& a){
