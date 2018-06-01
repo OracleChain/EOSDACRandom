@@ -69,7 +69,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
         for (auto itr = _seeds.cbegin(); itr != _seeds.cend(); ) {
             itr = _seeds.erase(itr);
         }
-		_seeds_count = 0;
+        _seeds_count = 0;
         return;
     }
 
