@@ -83,13 +83,15 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
     if (seedsmatch()) {
         uint64_t cur = current_time();
         int64_t num = random();
-		static int expiraion = 3000; // ms
+        static int expiraion = 3000; // ms
 
         for (auto i = _geters.begin(); i != _geters.end();) {
             auto& v = i->requestinfo;
             for (auto j = v.cbegin(); j != v.cend();) {
                 if (cur - std::get<1>(*j) >= expiraion) {
-                    dispatch_inline(i->owner, string_to_name("getrandom"), {permission_level(_self, N(active))}, std::make_tuple(std::get<0>(*j), num));
+                    dispatch_inline(i->owner, string_to_name("getrandom"),
+                                    {permission_level(_self, N(active))},
+                                    std::make_tuple(std::get<0>(*j), num));
                     j = v.erase(j);
                 } else {
                     ++j;
