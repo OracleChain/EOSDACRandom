@@ -32,7 +32,6 @@ void eosdacrandom::setsize(uint64_t size)
 void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 {
     eosio_assert(is_account(owner), "Invalid account");
-    eosio_assert(_seeds_count == _seed_target_size, "some seed hash has not been set");
     eosio::asset fromBalance = eosdactoken(N(octoneos)).get_balance(owner, string_to_name(symbol.c_str()));
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
@@ -40,6 +39,15 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
     eosio_assert(selfBalance.amount > 0, "contract account has not enough OCT to do it");
 
     require_auth(owner);
+
+    auto s = _seeds.find(owner);
+    if (_seeds_count < _seed_target_size) {
+        if (s != _seeds.end()) {
+            _seeds.erase(s);
+            _seeds_count --;
+        }
+        eosio_assert(s != _seeds.end(), "account not found");
+    }
 
     checksum256 cs;
     char d[255] = { 0 };
@@ -53,10 +61,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
         h += hex;
     }
 
-    auto s = _seeds.find(owner);
-    eosio_assert(s != _seeds.end(), "account not found");
     eosio_assert(s->seed != seed, "you have already send seed");
-
     if (s->hash != h) {
         print("seed not match hash");
         //SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
@@ -75,13 +80,13 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 
     // if all seeds match
     if (seedsmatch()) {
-		int64_t num = random();
-		uint64_t cur = current_time();
+        uint64_t cur = current_time();
+        int64_t num = random();
 		static int expiraion = 3000; // ms
 
         for (auto i = _geters.cbegin(); i != _geters.cend();) {
             if (cur - i->timestamp >= expiraion) {
-                //SEND_INLINE_ACTION( i->owner, getrandom, {_self,N(active)}, {num} );
+                //SEND_INLINE_ACTION( i->owner, getrandom, {_self,N(active)}, {i->index, num} );
                 i = _geters.erase(i);
             } else {
                 ++i;
@@ -104,8 +109,8 @@ void eosdacrandom::sendhash(name owner, string hash, string symbol)
         _seeds.emplace(_self, [&](auto& a){
             a.owner = owner;
             a.hash = hash;
-            _seeds_count++;
         });
+        _seeds_count++;
     } else {
         _seeds.modify(s, _self, [&](auto& a){
             a.hash = hash;
@@ -113,7 +118,7 @@ void eosdacrandom::sendhash(name owner, string hash, string symbol)
     }
 }
 
-void eosdacrandom::getrandom(name owner)
+void eosdacrandom::getrandom(name owner, uint64_t index)
 {
     eosio_assert(is_account(owner), "Invalid account");
 
@@ -123,12 +128,19 @@ void eosdacrandom::getrandom(name owner)
     if (it == _geters.end()) {
         _geters.emplace(_self, [&](auto& a){
             a.owner = owner;
+            a.index = index;
             a.timestamp = cur;
         });
     } else {
-        _geters.modify(it, _self, [&](auto& a){
-            a.timestamp = cur;
-        });
+        if (a.index == index) {
+            return;
+        } else {
+            _geters.emplace(_self, [&](auto& a){
+                a.owner = owner;
+                a.index = index;
+                a.timestamp = cur;
+            });
+        }
     }
 }
 

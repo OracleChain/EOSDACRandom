@@ -23,6 +23,7 @@ typedef eosio::multi_index<N(seeds), seed_info> seed_table;
 struct geter_info
 {
     name owner;
+    uint64_t index;
     uint64_t timestamp;
 
     uint64_t primary_key() const { return owner; }
@@ -35,7 +36,7 @@ typedef  eosio::multi_index<N(geters), geter_info> geter_table;
 class get_random : public eosio::contract
 {
 public:
-    virtual void getrandom(int64_t number) {}
+    virtual void getrandom(uint64_t index, int64_t number) {}
 };
 
 class eosdacrandom : public eosio::contract
@@ -54,7 +55,7 @@ public:
     void sendhash(name owner, string hash, string symbol);
 
     // @abi action
-    void getrandom(name owner);
+    void getrandom(name owner, uint64_t index);
 
 private:
     int64_t random();
