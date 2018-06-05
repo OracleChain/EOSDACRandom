@@ -24,6 +24,33 @@ A random number generator smart contract.
 ----
 
 ### test
+
+#### How to test EOSDACRandom contract?
+
+```
+1. deploy EOSDACToken contract
+2. create OCT
+3. issue OCT
+4. create account
+  4.1 eosdacrandom
+  4.2 requester
+  4.3 seeder1, seeder2, seeder3
+5. transfer OCT to requester, seeder1, seeder2, seeder3
+6. deploy EOSDACRandom contract
+7. deploy requester contract
+8. push action eosdacrandom setsize '[3]' -p eosdacrandom
+9. push action eosdacrandom regrequest '["requester", 1]' -p requester
+10. push action eosdacrandom sendhash '["seeder1", "A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3", "OCT"]' -p seeder1
+11. push action eosdacrandom sendhash '["seeder2", "A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3", "OCT"]' -p seeder2
+12. push action eosdacrandom sendhash '["seeder3", "A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3", "OCT"]' -p seeder3
+13. push action eosdacrandom seedseed '["seeder1", 1, "OCT"]' -p seeder1
+14. push action eosdacrandom sendseed '["seeder2", 1, "OCT"]' -p seeder2
+15. push action eosdacrandom sendseed '["seeder3", 1, "OCT"]' -p seeder3
+16. here requester should get the random number.
+```
+
+#### example
+
 ```
 cleos create account eosio eosdactoken EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 
