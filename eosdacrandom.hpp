@@ -66,6 +66,8 @@ public:
 private:
     int64_t random();
     bool seedsmatch();
+    checksum256 cal_sha256(int64_t word);
+    string cal_sha256_str(int64_t word);
 
 private:
     seed_table _seeds;

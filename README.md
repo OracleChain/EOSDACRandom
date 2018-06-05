@@ -21,3 +21,49 @@ A random number generator smart contract.
   * random contract generator a random number using seed pool. After it's done, clear pool, wait for next round.
   * send customer this random number using `getrandom` by `SEND_INLINE_ACTION`. After it's done, clear geters table, wait for next round.
 
+----
+
+### test
+```
+cleos create account eosio eosdactoken EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+
+cleos create account eosio eosdacrandom EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+
+cleos create account eosio requester EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+
+cleos create account eosio seeder1 EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+
+cleos create account eosio seeder2 EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+
+cleos create account eosio seeder3 EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+
+cleos set contract eosdactoken ./eosdactoken -p eosdactoken
+
+cleos push action eosdactoken create '["eosdactoken", "1000000000.0000 OCT"]' -p eosdactoken
+
+cleos push action eosdactoken issue '["eosdactoken", "1000000000.0000 OCT"]' -p eosdactoken
+
+cleos push action eosdactoken transfer '["eosdactoken", "eosdacrandom", "1000.0000 OCT", ""]' -p eosdactoken
+
+cleos push action eosdactoken transfer '["eosdactoken", "requester", "1.0000 OCT", ""]' -p eosdactoken
+
+cleos push action eosdactoken transfer '["eosdactoken", "seeder1", "1.0000 OCT", ""]' -p eosdactoken
+
+cleos push action eosdactoken transfer '["eosdactoken", "seeder2", "1.0000 OCT", ""]' -p eosdactoken
+
+cleos push action eosdactoken transfer '["eosdactoken", "seeder3", "1.0000 OCT", ""]' -p eosdactoken
+
+
+cleos set contract eosdacrandom ./eosdacrandom -p eosdacrandom
+
+cleos set contract requester ./requester -p requester
+
+cleos push action eosdacrandom setsize '[1]' -p eosdacrandom
+cleos push action eosdacrandom setsize '[1]' -p eosdacrandom
+
+cleos push action eosdacrandom regrequest '["requester", 1]' -p requester
+
+cleos push action eosdacrandom sendhash '["seeder1", "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b", "OCT"]' -p seeder1
+
+cleos push action eosdacrandom sendseed '["seeder1", 1, "OCT"]' -p seeder1
+```

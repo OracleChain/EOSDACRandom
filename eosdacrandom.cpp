@@ -2,8 +2,8 @@
 #include <eosiolib/system.h>
 #include <eosiolib/stdlib.hpp>
 #include <eosiolib/action.hpp>
-#include "../EOSDACVote/eosdacvote.hpp"
-#include "../EOSDACToken/eosdactoken.hpp"
+#include <eosiolib/symbol.hpp>
+#include "../eosdactoken/eosdactoken.hpp"
 
 using namespace eosio;
 
@@ -30,40 +30,30 @@ void eosdacrandom::setsize(uint64_t size)
     _seed_target_size = size;
 }
 
-void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
+void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
 {
     eosio_assert(is_account(owner), "Invalid account");
-    eosio::asset fromBalance = eosdactoken(N(octoneos)).get_balance(owner, string_to_name(symbol.c_str()));
+    symbol_type symbol(string_to_symbol(4, sym.c_str()));
+    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(owner, symbol.name());
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
-    eosio::asset selfBalance = eosdactoken(N(octoneos)).get_balance(_self, string_to_name(symbol.c_str()));
+    eosio::asset selfBalance = eosdactoken(N(eosdactoken)).get_balance(_self, symbol.name());
     eosio_assert(selfBalance.amount > 0, "contract account has not enough OCT to do it");
 
     require_auth(owner);
 
-    auto s = _seeds.find(owner);
+    const auto& sd = _seeds.find(owner);
     if (_seeds_count < _seed_target_size) {
-        if (s != _seeds.end()) {
-            _seeds.erase(s);
+        if (sd != _seeds.end()) {
+            _seeds.erase(sd);
             _seeds_count --;
         }
-        eosio_assert(s != _seeds.end(), "account not found");
+        eosio_assert(sd != _seeds.end(), "account not found");
     }
 
-    checksum256 cs;
-    char d[255] = { 0 };
-    sprintf(d, "%I64d", seed);
-    sha256(d, strlen(d), &cs);
-
-    string h;
-    for (int i = 0; i < sizeof(cs.hash); ++i) {
-        char hex[3];
-        sprintf((char*)&hex[0], "%02x", cs.hash[i]);
-        h += hex;
-    }
-
-    eosio_assert(s->seed != seed, "you have already send seed");
-    if (s->hash != h) {
+    string h = cal_sha256_str(seed);
+    eosio_assert(sd->seed != seed, "you have already send seed");
+    if (sd->hash != h) {
         print("seed not match hash");
         //SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
         for (auto itr = _seeds.cbegin(); itr != _seeds.cend(); ) {
@@ -73,17 +63,25 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
         return;
     }
 
-    _seeds.modify(s, _self, [&](auto& a){
+    print("hash match. ");
+
+    _seeds.modify(sd, _self, [&](auto& a){
+        print("modify. ");
         a.seed = seed;
     });
 
+    print("modify done. ");
+
     _seeds_match ++;
+
+    print("seed match");
 
     // if all seeds match
     if (seedsmatch()) {
+        print("all seeds matched.");
         uint64_t cur = current_time();
         int64_t num = random();
-        static int expiraion = 3000; // ms
+        static int expiraion = 3000000; // ms
 
         for (auto i = _geters.cbegin(); i != _geters.cend(); ++i) {
             bool dispatched = false;
@@ -114,11 +112,12 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
     }
 }
 
-void eosdacrandom::sendhash(name owner, string hash, string symbol)
+void eosdacrandom::sendhash(name owner, string hash, string sym)
 {
     eosio_assert(is_account(owner), "Invalid account");
     eosio_assert(_seeds_count < _seed_target_size, "seeds is full");
-    eosio::asset fromBalance = eosdactoken(N(octoneos)).get_balance(owner, string_to_name(symbol.c_str()));
+    symbol_type symbol(string_to_symbol(4, sym.c_str()));
+    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(owner, symbol.name());
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
     require_auth(owner);
@@ -182,19 +181,15 @@ int64_t eosdacrandom::random()
     _seeds_count = 0;
     _seeds_match = 0;
 
-    checksum256 cs;
-    char d[255] = { 0 };
-    sprintf(d, "%I64d", seed);
-    sha256(d, strlen(d), &cs);
-
-    return ((cs.hash[0] & 0xFF) |
-            ((cs.hash[1] & 0xFF) << 8) |
-            ((cs.hash[2] & 0xFF) << 16) |
-            ((cs.hash[3] & 0xFF) << 24) |
-            ((cs.hash[4] & 0xFF) << 32) |
-            ((cs.hash[5] & 0xFF) << 40) |
-            ((cs.hash[6] & 0xFF) << 48) |
-            ((cs.hash[7] & 0xFF) << 56));
+    checksum256 cs = cal_sha256(seed);
+    return (((int64_t)cs.hash[0] << 56 ) & 0xFF00000000000000U)
+        |  (((int64_t)cs.hash[1] << 48 ) & 0x00FF000000000000U)
+        |  (((int64_t)cs.hash[2] << 40 ) & 0x0000FF0000000000U)
+        |  (((int64_t)cs.hash[3] << 32 ) & 0x000000FF00000000U)
+        |  ((cs.hash[4] << 24 ) & 0x00000000FF000000U)
+        |  ((cs.hash[5] << 16 ) & 0x0000000000FF0000U)
+        |  ((cs.hash[6] << 8 ) & 0x000000000000FF00U)
+        |  (cs.hash[7] & 0x00000000000000FFU);
 }
 
 bool eosdacrandom::seedsmatch()
@@ -208,6 +203,29 @@ bool eosdacrandom::seedsmatch()
     }
 
     return false;
+}
+
+checksum256 eosdacrandom::cal_sha256(int64_t word)
+{
+    checksum256 cs = { 0 };
+    char d[255] = { 0 };
+    snprintf(d, sizeof(d), "%lld", word);
+    sha256(d, strlen(d), &cs);
+
+    return cs;
+}
+
+string eosdacrandom::cal_sha256_str(int64_t word)
+{
+    string h;
+    checksum256 cs = cal_sha256(word);
+    for (int i = 0; i < sizeof(cs.hash); ++i) {
+        char hex[3] = { 0 };
+        snprintf((char*)&hex[0], sizeof(hex), "%02x", cs.hash[i]);
+        h += hex;
+    }
+
+    return h;
 }
 
 EOSIO_ABI( eosdacrandom, (setsize) (sendseed) (sendhash) (regrequest) )
