@@ -21,11 +21,20 @@ struct seed_info
 
 typedef eosio::multi_index<N(seeds), seed_info> seed_table;
 
+// @abi table request_info
+struct request_info
+{
+    uint64_t index;
+    uint64_t timestamp;
+
+    EOSLIB_SERIALIZE( request_info, (index) (timestamp) )
+};
+
 // @abi table geter_info
 struct geter_info
 {
     name     owner;
-    std::vector<std::tuple<uint64_t, uint64_t>> requestinfo;  // index, timestamp
+    std::vector<request_info> requestinfo;
 
     uint64_t primary_key() const { return owner; }
 

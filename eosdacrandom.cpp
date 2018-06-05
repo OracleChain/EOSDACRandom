@@ -87,12 +87,12 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string symbol)
 
         for (auto i = _geters.cbegin(); i != _geters.cend(); ++i) {
             bool dispatched = false;
-            std:vector<std::tuple<uint64_t, uint64_t>> tmp(i->requestinfo);
+            std:vector<request_info> tmp(i->requestinfo);
             for (auto j = tmp.begin(); j != tmp.end();) {
-                if (cur - std::get<1>(*j) >= expiraion) {
+                if (cur - j->timestamp >= expiraion) {
                     dispatch_inline(i->owner, string_to_name("getrandom"),
                                     {permission_level(_self, N(active))},
-                                    std::make_tuple(std::get<0>(*j), num));
+                                    std::make_tuple(j->index, num));
                     j = tmp.erase(j);
                     dispatched = true;
                 } else {
@@ -143,7 +143,7 @@ void eosdacrandom::regrequest(name owner, uint64_t index)
 
     uint64_t cur = current_time();
     auto it = _geters.find(owner);
-    auto req = std::make_tuple(index, cur);
+    request_info req {index, cur};
     if (it == _geters.end()) {
         _geters.emplace(_self, [&](auto& a){
             a.owner = owner;
@@ -153,7 +153,7 @@ void eosdacrandom::regrequest(name owner, uint64_t index)
         _geters.modify(it, _self, [&](auto& a){
             bool same_idx = false;
             for (auto ri = a.requestinfo.begin(); ri != a.requestinfo.end(); ++ri) {
-                if (std::get<0>(*ri) == index) {    // if index equals former index.
+                if (ri->index == index) {    // if index equals former index.
                     *ri = req;
                     same_idx = true;
                     break;
