@@ -221,7 +221,7 @@ string eosdacrandom::cal_sha256_str(int64_t word)
     checksum256 cs = cal_sha256(word);
     for (int i = 0; i < sizeof(cs.hash); ++i) {
         char hex[3] = { 0 };
-        snprintf((char*)&hex[0], sizeof(hex), "%02x", cs.hash[i]);
+        snprintf(hex, sizeof(hex), "%02x", static_cast<unsigned char>(cs.hash[i]));
         h += hex;
     }
 
