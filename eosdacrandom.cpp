@@ -209,7 +209,7 @@ checksum256 eosdacrandom::cal_sha256(int64_t word)
 {
     checksum256 cs = { 0 };
     char d[255] = { 0 };
-    snprintf(d, sizeof(d), "%lld", word);
+    snprintf(d, sizeof(d) - 1, "%lld", word);
     sha256(d, strlen(d), &cs);
 
     return cs;
