@@ -10,12 +10,9 @@ using namespace eosio;
 eosdacrandom::eosdacrandom(account_name name)
         : contract(name),
           _seeds(_self, name),
-          _geters(_self, name),
-          _seed_target_size(3),
-          _seeds_count(0),
-          _seeds_match(0)
+          _geters(_self, name)
 {
-
+    print("eosdacrandom construct");
 }
 
 eosdacrandom::~eosdacrandom()
@@ -26,8 +23,24 @@ eosdacrandom::~eosdacrandom()
 void eosdacrandom::setsize(uint64_t size)
 {
     require_auth(_self);
-    eosio_assert(_seeds_count < _seed_target_size, "seeds full, do not change size now");
-    _seed_target_size = size;
+
+    seedconfig_table config(_self, _self);
+    auto existing = config.find(_self);
+    if (existing != config.end()) {
+        if (existing->hash_count == existing->target_size) {
+            if (existing->hash_count != existing->seed_match) {
+                eosio_assert(false, "do not set size during sendseed period");
+            }
+        }
+
+        config.modify(existing, _self, [&](auto& c){
+            c.target_size = size;
+        });
+    } else {
+        config.emplace(_self, [&](auto& c){
+            c.target_size = size;
+        });
+    }
 }
 
 void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
@@ -42,13 +55,25 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
 
     require_auth(owner);
 
+    seedconfig_table config(_self, _self);
+    auto existing = config.find(_self);
+    eosio_assert(existing != config.end(), "target size must set first");
+    const auto& cfg = *existing;
+
     const auto& sd = _seeds.find(owner);
-    if (_seeds_count < _seed_target_size) {
+    if (cfg.hash_count < cfg.target_size) {
+        print("hash count: ");
+        print(cfg.hash_count);
+        print(" target size: ");
+        print(cfg.target_size);
+        print(" hash count < target size");
         if (sd != _seeds.end()) {
             _seeds.erase(sd);
-            _seeds_count --;
+            config.modify(cfg, _self, [&](auto& c){
+                c.hash_count --;
+            });
         }
-        eosio_assert(sd != _seeds.end(), "account not found");
+        eosio_assert(false, "hash size not fulled");
     }
 
     string h = cal_sha256_str(seed);
@@ -59,7 +84,9 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
         for (auto itr = _seeds.cbegin(); itr != _seeds.cend(); ) {
             itr = _seeds.erase(itr);
         }
-        _seeds_count = 0;
+        config.modify(cfg, _self, [&](auto& c){
+            c.hash_count = 0;
+        });
         return;
     }
 
@@ -72,7 +99,9 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
 
     print("modify done. ");
 
-    _seeds_match ++;
+    config.modify(cfg, _self, [&](auto& c){
+        c.seed_match++;
+    });
 
     print("seed match");
 
@@ -110,12 +139,22 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
             }
         }
     }
+
+    print("sendseed");
 }
 
 void eosdacrandom::sendhash(name owner, string hash, string sym)
 {
+    print("###enter sendhash###");
     eosio_assert(is_account(owner), "Invalid account");
-    eosio_assert(_seeds_count < _seed_target_size, "seeds is full");
+
+    seedconfig_table config(_self, _self);
+    auto existing = config.find(_self);
+    eosio_assert(existing != config.end(), "target size must set first");
+    const auto& cfg = *existing;
+
+    eosio_assert(cfg.hash_count < cfg.target_size, "seeds is full");
+
     symbol_type symbol(string_to_symbol(4, sym.c_str()));
     eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(owner, symbol.name());
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
@@ -128,7 +167,10 @@ void eosdacrandom::sendhash(name owner, string hash, string sym)
             a.owner = owner;
             a.hash = hash;
         });
-        _seeds_count++;
+
+        config.modify(cfg, _self, [&](auto& c){
+            c.hash_count++;
+        });
     } else {
         _seeds.modify(s, _self, [&](auto& a){
             a.hash = hash;
@@ -164,12 +206,16 @@ void eosdacrandom::regrequest(name owner, uint64_t index)
             }
         });
     }
+    print("regrequest");
 }
 
 int64_t eosdacrandom::random()
 {
     // use _seeds to generate random number
-    eosio_assert(_seeds_count == _seed_target_size, "seed is not full");
+    seedconfig_table config(_self, _self);
+    auto existing = config.find(_self);
+    eosio_assert(existing != config.end(), "target size must set first");
+    eosio_assert(existing->hash_count == existing->target_size, "seed is not full");
 
     // how to generate random number?
     int64_t  seed = 0;
@@ -178,8 +224,10 @@ int64_t eosdacrandom::random()
         it = _seeds.erase(it);
     }
 
-    _seeds_count = 0;
-    _seeds_match = 0;
+    config.modify(existing, _self, [&](auto& c){
+        c.hash_count = 0;
+        c.seed_match = 0;
+    });
 
     checksum256 cs = cal_sha256(seed);
     return (((int64_t)cs.hash[0] << 56 ) & 0xFF00000000000000U)
@@ -194,11 +242,16 @@ int64_t eosdacrandom::random()
 
 bool eosdacrandom::seedsmatch()
 {
-    if (_seeds_count != _seed_target_size) {
+    seedconfig_table config(_self, _self);
+    auto existing = config.find(_self);
+    eosio_assert(existing != config.end(), "target size must set first");
+    const auto& cfg = *existing;
+
+    if (cfg.hash_count != cfg.target_size) {
         return false;
     }
 
-    if (_seeds_count == _seeds_match) {
+    if (cfg.hash_count == cfg.seed_match) {
         return true;
     }
 

@@ -63,6 +63,19 @@ public:
     // @abi action
     void regrequest(name owner, uint64_t index);
 
+public:
+    struct seed_config
+    {
+        account_name owner;
+        uint64_t target_size;
+        uint64_t hash_count;
+        uint64_t seed_match;
+
+        uint64_t primary_key() const { return owner; }
+    };
+
+    typedef eosio::multi_index<N(seedconfig), seed_config> seedconfig_table;
+
 private:
     int64_t random();
     bool seedsmatch();
@@ -72,7 +85,4 @@ private:
 private:
     seed_table _seeds;
     geter_table _geters;
-    uint64_t _seed_target_size;
-    uint64_t _seeds_count;
-    uint64_t _seeds_match;
 };
