@@ -7,7 +7,7 @@
 using namespace eosio;
 using namespace std;
 
-// @abi table seed_info
+// @abi table
 struct seed_info
 {
     name    owner;
@@ -21,7 +21,7 @@ struct seed_info
 
 typedef eosio::multi_index<N(seeds), seed_info> seed_table;
 
-// @abi table request_info
+// @abi table
 struct request_info
 {
     uint64_t index;
@@ -30,7 +30,7 @@ struct request_info
     EOSLIB_SERIALIZE( request_info, (index) (timestamp) )
 };
 
-// @abi table geter_info
+// @abi table
 struct geter_info
 {
     name     owner;
@@ -65,8 +65,8 @@ public:
 
 public:
 
-    // @abi table seed_config
-    struct seed_config
+    // @abi table
+    struct seedconfig
     {
         account_name owner;
         uint64_t target_size;
@@ -75,16 +75,17 @@ public:
 
         uint64_t primary_key() const { return owner; }
 
-        EOSLIB_SERIALIZE( seed_config, (owner) (target_size) (hash_count) (seed_match) )
+        EOSLIB_SERIALIZE( seedconfig, (owner) (target_size) (hash_count) (seed_match) )
     };
 
-    typedef eosio::multi_index<N(seedconfig), seed_config> seedconfig_table;
+    typedef eosio::multi_index<N(seedconfig), seedconfig> seedconfig_table;
 
 private:
     int64_t random();
     bool seedsmatch();
     checksum256 cal_sha256(int64_t word);
     string cal_sha256_str(int64_t word);
+    void dispatch_request(name owner);
 
 private:
     seed_table _seeds;

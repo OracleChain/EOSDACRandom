@@ -38,6 +38,7 @@ void eosdacrandom::setsize(uint64_t size)
         });
     } else {
         config.emplace(_self, [&](auto& c){
+            c.owner = _self;
             c.target_size = size;
         });
     }
@@ -100,44 +101,16 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
     print("modify done. ");
 
     config.modify(cfg, _self, [&](auto& c){
-        c.seed_match++;
+        c.seed_match = c.seed_match + 1;
+        print(" modify seed_match. ");
+        print(c.seed_match);
     });
 
-    print("seed match");
+    print("seed match.");
 
     // if all seeds match
     if (seedsmatch()) {
-        print("all seeds matched.");
-        uint64_t cur = current_time();
-        int64_t num = random();
-        static int expiraion = 3000000; // ms
-
-        for (auto i = _geters.cbegin(); i != _geters.cend(); ++i) {
-            bool dispatched = false;
-            std:vector<request_info> tmp(i->requestinfo);
-            for (auto j = tmp.begin(); j != tmp.end();) {
-                if (cur - j->timestamp >= expiraion) {
-                    dispatch_inline(i->owner, string_to_name("getrandom"),
-                                    {permission_level(_self, N(active))},
-                                    std::make_tuple(j->index, num));
-                    j = tmp.erase(j);
-                    dispatched = true;
-                } else {
-                    ++j;
-                }
-            }
-
-            if (dispatched) {
-                _geters.erase(i);
-
-                if (tmp.size()) {
-                    _geters.emplace(_self, [&](auto& a){
-                        a.owner = owner;
-                        a.requestinfo = tmp;
-                    });
-                }
-            }
-        }
+        dispatch_request(owner);
     }
 
     print("sendseed");
@@ -229,6 +202,10 @@ int64_t eosdacrandom::random()
         c.seed_match = 0;
     });
 
+    print(" during random: hash_count and seed_match are: ");
+    print(existing->hash_count);
+    print(existing->seed_match);
+
     checksum256 cs = cal_sha256(seed);
     return (((int64_t)cs.hash[0] << 56 ) & 0xFF00000000000000U)
         |  (((int64_t)cs.hash[1] << 48 ) & 0x00FF000000000000U)
@@ -279,6 +256,48 @@ string eosdacrandom::cal_sha256_str(int64_t word)
     }
 
     return h;
+}
+
+void eosdacrandom::dispatch_request(name owner)
+{
+    print("all seeds matched.");
+    uint64_t cur = current_time();
+    int64_t num = random();
+    static int expiraion = 3000000; // ms
+    std::vector<std::vector<request_info>> reqs;
+
+    for (auto i = _geters.cbegin(); i != _geters.cend();) {
+        std:vector<request_info> tmp(i->requestinfo);
+        for (auto j = tmp.begin(); j != tmp.end();) {
+            if (cur - j->timestamp >= expiraion) {
+                print(" start dispatch_inline. ");
+                /*dispatch_inline(i->owner, string_to_name("getrandom"),
+                                {permission_level(_self, N(active))},
+                                std::make_tuple(j->index, num));*/
+                /*INLINE_ACTION_SENDER(requester, string_to_name("getrandom"))(requester,
+                {permission_level(_self, N(active))},{std::make_tuple(j->index, num)});*/
+                print(" end dispatch_inline. ");
+                j = tmp.erase(j);
+            } else {
+                ++j;
+            }
+        }
+
+        if (tmp.size()) {
+            reqs.push_back(tmp);
+        }
+
+        i = _geters.erase(i);
+    }
+
+    if (reqs.size()) {
+        for (auto r = reqs.cbegin(); r != reqs.cend(); ++r) {
+            _geters.emplace(_self, [&](auto& a){
+                a.owner = owner;
+                a.requestinfo = *r;
+            });
+        }
+    }
 }
 
 EOSIO_ABI( eosdacrandom, (setsize) (sendseed) (sendhash) (regrequest) )
