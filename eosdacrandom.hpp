@@ -64,6 +64,8 @@ public:
     void regrequest(name owner, uint64_t index);
 
 public:
+
+    // @abi table seed_config
     struct seed_config
     {
         account_name owner;
@@ -72,6 +74,8 @@ public:
         uint64_t seed_match;
 
         uint64_t primary_key() const { return owner; }
+
+        EOSLIB_SERIALIZE( seed_config, (owner) (target_size) (hash_count) (seed_match) )
     };
 
     typedef eosio::multi_index<N(seedconfig), seed_config> seedconfig_table;
