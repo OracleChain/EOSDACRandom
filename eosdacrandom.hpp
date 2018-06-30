@@ -25,9 +25,10 @@ typedef eosio::multi_index<N(seeds), seed_info> seed_table;
 struct request_info
 {
     uint64_t index;
+    string handler;
     uint64_t timestamp;
 
-    EOSLIB_SERIALIZE( request_info, (index) (timestamp) )
+    EOSLIB_SERIALIZE( request_info, (index) (handler) (timestamp) )
 };
 
 // @abi table
@@ -55,13 +56,13 @@ public:
     void setsize(uint64_t size);
 
     // @abi action
-    void sendseed(name owner, int64_t seed, string symbol);
+    void sendseed(name owner, int64_t seed/*, string symbol*/);
 
     // @abi action
-    void sendhash(name owner, string hash, string symbol);
+    void sendhash(name owner, string hash/*, string symbol*/);
 
     // @abi action
-    void regrequest(name owner, uint64_t index);
+    void regrequest(name owner, uint64_t index, string handler = "getrandom");
 
 public:
 
