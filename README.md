@@ -37,4 +37,4 @@ after the random number request is sent, the random generator will call the give
 void func(uint64_t index, uint64_t num);
 ```
 
-the name of the handler can be chosed at will.
+the name of the handler can be chosen at will.
