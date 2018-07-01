@@ -29,7 +29,7 @@ make install
 make test
 ```
 
-### how do define customized random number handler
+### how to define customized random number handler
 
 after the random number request is sent, the random generator will call the given random number handler when random number is generated. you need to predefine an action with sign of 
 
