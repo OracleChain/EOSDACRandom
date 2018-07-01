@@ -32,11 +32,13 @@ void eosdacrandom::setsize(uint64_t size)
 
         config.modify(existing, _self, [&](auto& c){
             c.target_size = size;
+	    c.hash_count = 0;
         });
     } else {
         config.emplace(_self, [&](auto& c){
             c.owner = _self;
             c.target_size = size;
+	    c.hash_count = 0;
         });
     }
 }
