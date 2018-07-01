@@ -10,6 +10,7 @@ randseedserver: randseedserver.o
 .PHONY: contract install
 contract:
 	make -C eosdacrandom
+	make -C requester
 
 install: all
 	bash set_contract.sh
@@ -21,4 +22,4 @@ test:
 clean:
 	$(RM) $(OBJS) randseedserver
 	make -C eosdacrandom clean
-
+	make -C requester clean
