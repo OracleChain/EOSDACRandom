@@ -3,7 +3,6 @@
 #include <eosiolib/stdlib.hpp>
 #include <eosiolib/action.hpp>
 #include <eosiolib/symbol.hpp>
-#include "../eosdactoken/eosdactoken.hpp"
 
 using namespace eosio;
 
@@ -33,24 +32,26 @@ void eosdacrandom::setsize(uint64_t size)
 
         config.modify(existing, _self, [&](auto& c){
             c.target_size = size;
+	    c.hash_count = 0;
         });
     } else {
         config.emplace(_self, [&](auto& c){
             c.owner = _self;
             c.target_size = size;
+	    c.hash_count = 0;
         });
     }
 }
 
-void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
+void eosdacrandom::sendseed(name owner, int64_t seed/*, string sym*/)
 {
     eosio_assert(is_account(owner), "Invalid account");
-    symbol_type symbol(string_to_symbol(4, sym.c_str()));
-    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(owner, symbol.name());
-    eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
+//    symbol_type symbol(string_to_symbol(4, sym.c_str()));
+//    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(owner, symbol.name());
+//    eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
-    eosio::asset selfBalance = eosdactoken(N(eosdactoken)).get_balance(_self, symbol.name());
-    eosio_assert(selfBalance.amount > 0, "contract account has not enough OCT to do it");
+//    eosio::asset selfBalance = eosdactoken(N(eosdactoken)).get_balance(_self, symbol.name());
+//    eosio_assert(selfBalance.amount > 0, "contract account has not enough OCT to do it");
 
     require_auth(owner);
 
@@ -98,7 +99,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
     }
 }
 
-void eosdacrandom::sendhash(name owner, string hash, string sym)
+void eosdacrandom::sendhash(name owner, string hash/*, string sym*/)
 {
     eosio_assert(is_account(owner), "Invalid account");
 
@@ -109,9 +110,9 @@ void eosdacrandom::sendhash(name owner, string hash, string sym)
 
     eosio_assert(cfg.hash_count < cfg.target_size, "seeds is full");
 
-    symbol_type symbol(string_to_symbol(4, sym.c_str()));
-    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(owner, symbol.name());
-    eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
+//    symbol_type symbol(string_to_symbol(4, sym.c_str()));
+//    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(owner, symbol.name());
+//    eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
     require_auth(owner);
 
@@ -132,13 +133,13 @@ void eosdacrandom::sendhash(name owner, string hash, string sym)
     }
 }
 
-void eosdacrandom::regrequest(name owner, uint64_t index)
+void eosdacrandom::regrequest(name owner, uint64_t index, string handler)
 {
     eosio_assert(is_account(owner), "Invalid account");
 
     uint64_t cur = current_time();
     auto it = _geters.find(owner);
-    request_info req {index, cur};
+    request_info req {index, handler, cur};
     if (it == _geters.end()) {
         _geters.emplace(_self, [&](auto& a){
             a.owner = owner;
@@ -246,7 +247,7 @@ void eosdacrandom::dispatch_request(name owner)
         std:vector<request_info> tmp(i->requestinfo);
         for (auto j = tmp.begin(); j != tmp.end();) {
             if (cur - j->timestamp >= expiraion) {
-                dispatch_inline(i->owner, string_to_name("getrandom"),
+                dispatch_inline(i->owner, string_to_name(j->handler.c_str()),
                                 {permission_level(_self, N(active))},
                                 std::make_tuple(j->index, num));
                 j = tmp.erase(j);
