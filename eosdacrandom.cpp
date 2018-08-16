@@ -187,10 +187,10 @@ int64_t eosdacrandom::random()
         |  (((int64_t)cs.hash[1] << 48 ) & 0x00FF000000000000U)
         |  (((int64_t)cs.hash[2] << 40 ) & 0x0000FF0000000000U)
         |  (((int64_t)cs.hash[3] << 32 ) & 0x000000FF00000000U)
-        |  ((cs.hash[4] << 24 ) & 0x00000000FF000000U)
-        |  ((cs.hash[5] << 16 ) & 0x0000000000FF0000U)
-        |  ((cs.hash[6] << 8 ) & 0x000000000000FF00U)
-        |  (cs.hash[7] & 0x00000000000000FFU);
+        |  ((cs.hash[4] << 24 )          & 0x00000000FF000000U)
+        |  ((cs.hash[5] << 16 )          & 0x0000000000FF0000U)
+        |  ((cs.hash[6] << 8 )           & 0x000000000000FF00U)
+        |  (cs.hash[7]                   & 0x00000000000000FFU);
 }
 
 bool eosdacrandom::seedsmatch()
