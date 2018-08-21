@@ -86,8 +86,4 @@ private:
     checksum256 cal_sha256(int64_t word);
     string cal_sha256_str(int64_t word);
     void dispatch_request(name owner);
-
-private:
-    seed_table _seeds;
-    geter_table _geters;
 };

@@ -8,9 +8,7 @@
 using namespace eosio;
 
 eosdacrandom::eosdacrandom(account_name name)
-        : contract(name),
-          _seeds(_self, name),
-          _geters(_self, name)
+        : contract(name)
 {
 }
 
@@ -59,10 +57,11 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
     eosio_assert(existing != config.end(), "target size must set first");
     const auto& cfg = *existing;
 
-    const auto& sd = _seeds.find(owner);
+    seed_table seeds(_self, _self);
+    const auto& sd = seeds.find(owner);
     if (cfg.hash_count < cfg.target_size) {
-        if (sd != _seeds.end()) {
-            _seeds.erase(sd);
+        if (sd != seeds.end()) {
+            seeds.erase(sd);
             config.modify(cfg, _self, [&](auto& c){
                 c.hash_count --;
             });
@@ -72,10 +71,11 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
 
     string h = cal_sha256_str(seed);
     eosio_assert(sd->seed != seed, "you have already send seed");
+    seed_table seeds(_self, _self);
     if (sd->hash != h) {
         //SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
-        for (auto itr = _seeds.cbegin(); itr != _seeds.cend(); ) {
-            itr = _seeds.erase(itr);
+        for (auto itr = seeds.cbegin(); itr != seeds.cend(); ) {
+            itr = seeds.erase(itr);
         }
         config.modify(cfg, _self, [&](auto& c){
             c.hash_count = 0;
@@ -83,7 +83,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
         return;
     }
 
-    _seeds.modify(sd, _self, [&](auto& a){
+    seeds.modify(sd, _self, [&](auto& a){
         a.seed = seed;
     });
 
@@ -115,9 +115,10 @@ void eosdacrandom::sendhash(name owner, string hash, string sym)
 
     require_auth(owner);
 
-    auto s = _seeds.find(owner);
-    if (s == _seeds.end()) {
-        _seeds.emplace(_self, [&](auto& a){
+    seed_table seeds(_self, _self);
+    auto s = seeds.find(owner);
+    if (s == seeds.end()) {
+        seeds.emplace(_self, [&](auto& a){
             a.owner = owner;
             a.hash = hash;
         });
@@ -126,7 +127,7 @@ void eosdacrandom::sendhash(name owner, string hash, string sym)
             c.hash_count++;
         });
     } else {
-        _seeds.modify(s, _self, [&](auto& a){
+        seeds.modify(s, _self, [&](auto& a){
             a.hash = hash;
         });
     }
@@ -136,16 +137,17 @@ void eosdacrandom::regrequest(name owner, uint64_t index)
 {
     eosio_assert(is_account(owner), "Invalid account");
 
+    geter_table geters(_self, _self);
+    auto it = geters.find(owner);
     uint64_t cur = current_time();
-    auto it = _geters.find(owner);
     request_info req {index, cur};
-    if (it == _geters.end()) {
-        _geters.emplace(_self, [&](auto& a){
+    if (it == geters.end()) {
+        geters.emplace(_self, [&](auto& a){
             a.owner = owner;
             a.requestinfo.push_back(req);
         });
     } else {
-        _geters.modify(it, _self, [&](auto& a){
+        geters.modify(it, _self, [&](auto& a){
             bool same_idx = false;
             for (auto ri = a.requestinfo.begin(); ri != a.requestinfo.end(); ++ri) {
                 if (ri->index == index) {    // if index equals former index.
@@ -164,7 +166,7 @@ void eosdacrandom::regrequest(name owner, uint64_t index)
 
 int64_t eosdacrandom::random()
 {
-    // use _seeds to generate random number
+    // use seeds to generate random number
     seedconfig_table config(_self, _self);
     auto existing = config.find(_self);
     eosio_assert(existing != config.end(), "target size must set first");
@@ -172,9 +174,10 @@ int64_t eosdacrandom::random()
 
     // how to generate random number?
     int64_t  seed = 0;
-    for (auto it = _seeds.cbegin(); it != _seeds.cend();) {
+    seed_table seeds(_self, _self);
+    for (auto it = seeds.cbegin(); it != seeds.cend();) {
         seed += it->seed;
-        it = _seeds.erase(it);
+        it = seeds.erase(it);
     }
 
     config.modify(existing, _self, [&](auto& c){
@@ -242,7 +245,8 @@ void eosdacrandom::dispatch_request(name owner)
     static int expiraion = 3000; // ms
     std::vector<std::vector<request_info>> reqs;
 
-    for (auto i = _geters.cbegin(); i != _geters.cend();) {
+    geter_table geters(_self, _self);
+    for (auto i = geters.cbegin(); i != geters.cend();) {
         std:vector<request_info> tmp(i->requestinfo);
         for (auto j = tmp.begin(); j != tmp.end();) {
             if (cur - j->timestamp >= expiraion) {
@@ -259,12 +263,12 @@ void eosdacrandom::dispatch_request(name owner)
             reqs.push_back(tmp);
         }
 
-        i = _geters.erase(i);
+        i = geters.erase(i);
     }
 
     if (reqs.size()) {
         for (auto r = reqs.cbegin(); r != reqs.cend(); ++r) {
-            _geters.emplace(_self, [&](auto& a){
+            geters.emplace(_self, [&](auto& a){
                 a.owner = owner;
                 a.requestinfo = *r;
             });
