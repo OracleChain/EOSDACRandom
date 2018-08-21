@@ -24,17 +24,17 @@ typedef eosio::multi_index<N(seeds), seed_info> seed_table;
 // @abi table
 struct request_info
 {
-    uint64_t index;
+    string orderid;
     uint64_t timestamp;
 
-    EOSLIB_SERIALIZE( request_info, (index) (timestamp) )
+    EOSLIB_SERIALIZE( request_info, (orderid) (timestamp) )
 };
 
 // @abi table
 struct geter_info
 {
-    name     owner;
-    std::vector<request_info> requestinfo;
+    name                    owner;
+    vector<request_info>    requestinfo;
 
     uint64_t primary_key() const { return owner; }
 
@@ -43,7 +43,7 @@ struct geter_info
 
 typedef  eosio::multi_index<N(geters), geter_info> geter_table;
 
-// void getrandom(uint64_t index, int64_t number) {}
+// void getrandom(string orderid, int64_t number) {}
 
 class eosdacrandom : public eosio::contract
 {
@@ -61,7 +61,7 @@ public:
     void sendhash(name owner, string hash, string symbol);
 
     // @abi action
-    void regrequest(name owner, uint64_t index);
+    void regrequest(name consumer, string orderid);
 
 public:
 

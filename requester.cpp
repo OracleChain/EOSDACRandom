@@ -6,9 +6,9 @@ public:
 	using contract::contract;
 
 	// @abi action
-	void getrandom(uint64_t index, uint64_t num) {
-		print("Index: ");
-		print(index);
+	void getrandom(string orderid, uint64_t num) {
+		print("Order id: ");
+		print(orderid);
 		print("Random number: ");
 		print(num);
 	}

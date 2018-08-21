@@ -132,31 +132,31 @@ void eosdacrandom::sendhash(name owner, string hash, string sym)
     }
 }
 
-void eosdacrandom::regrequest(name owner, uint64_t index)
+void eosdacrandom::regrequest(name consumer, string orderid)
 {
-    eosio_assert(is_account(owner), "Invalid account");
+    eosio_assert(is_account(consumer), "Invalid account");
 
     geter_table geters(_self, _self);
-    auto it = geters.find(owner);
+    auto it = geters.find(consumer);
     uint64_t cur = current_time();
-    request_info req {index, cur};
+    request_info req {orderid, cur};
     if (it == geters.end()) {
         geters.emplace(_self, [&](auto& a){
-            a.owner = owner;
+            a.owner = consumer;
             a.requestinfo.push_back(req);
         });
     } else {
         geters.modify(it, _self, [&](auto& a){
-            bool same_idx = false;
+            bool same_order = false;
             for (auto ri = a.requestinfo.begin(); ri != a.requestinfo.end(); ++ri) {
-                if (ri->index == index) {    // if index equals former index.
+                if (ri->orderid == orderid) {    // if index equals former index.
                     *ri = req;
-                    same_idx = true;
+                    same_order = true;
                     break;
                 }
             }
 
-            if (!same_idx) {
+            if (!same_order) {
                 a.requestinfo.push_back(req);
             }
         });
