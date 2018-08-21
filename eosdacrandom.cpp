@@ -4,6 +4,7 @@
 #include <eosiolib/action.hpp>
 #include <eosiolib/symbol.hpp>
 #include "../eosdactoken/eosdactoken.hpp"
+#include "../oracleserver/oracleserver.hpp"
 
 using namespace eosio;
 
@@ -136,6 +137,12 @@ void eosdacrandom::regrequest(name consumer, string orderid)
 {
     eosio_assert(is_account(consumer), "Invalid account");
 
+    // here we should query consumer and orderid from oracleserver for answer, whether the orderid is valid.
+    // if true, then go ahead, otherwise it stops.
+
+    bool order_validate = oracleserver(oracleserver).orderidvalidate(consumer, orderid);
+    eosio_assert(order_validate, "order id is not exist");
+
     geter_table geters(_self, _self);
     auto it = geters.find(consumer);
     uint64_t cur = current_time();
@@ -149,7 +156,7 @@ void eosdacrandom::regrequest(name consumer, string orderid)
         geters.modify(it, _self, [&](auto& a){
             bool same_order = false;
             for (auto ri = a.requestinfo.begin(); ri != a.requestinfo.end(); ++ri) {
-                if (ri->orderid == orderid) {    // if index equals former index.
+                if (ri->orderid == orderid) {    // if orderid equals former orderid.
                     *ri = req;
                     same_order = true;
                     break;
