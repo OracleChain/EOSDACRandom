@@ -71,7 +71,6 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
 
     string h = cal_sha256_str(seed);
     eosio_assert(sd->seed != seed, "you have already send seed");
-    seed_table seeds(_self, _self);
     if (sd->hash != h) {
         //SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
         for (auto itr = seeds.cbegin(); itr != seeds.cend(); ) {
