@@ -41,6 +41,41 @@ void eosdacrandom::setsize(uint64_t size)
     }
 }
 
+void eosdacrandom::setreserved(vector<name> dfs)
+{
+    require_auth(_self);
+
+    if (dfs.empty()) {
+        return;
+    }
+
+    seedconfig_table config(_self, _self);
+    auto existing = config.find(_self);
+    eosio_assert(existing != config.end(), "target size must set first");
+    eosio_assert(dfs.size() <= existing->target_size, "reserved data feeders' number bigger than target size");
+    eosio_assert(dfs.size() <= existing->target_size - existing->hash_count, "too much reserved data feeders");
+
+    seed_table seeds(_self, _self);
+    name n;
+    n.value = _self;
+    for (const auto& df : dfs) {
+        bool df_validate = oracleserver(tokenContract).datafeedervalidate(df, n);
+        eosio_assert(df_validate, "data feeder must register first");
+
+        auto sd = seeds.find(df);
+        if (sd == seeds.end()) {
+            seeds.emplace(_self, [&](auto& a){
+                a.datafeeder = df;
+            });
+
+            // do we have to set config's state? like hash_count? I think we do.
+            config.modify(*existing, _self, [&](auto& c){
+                c.hash_count++;
+            });
+        }
+    }
+}
+
 void eosdacrandom::sendseed(name datafeeder, int64_t seed)
 {
     require_auth(datafeeder);
@@ -268,4 +303,4 @@ void eosdacrandom::dispatch_request()
     }
 }
 
-EOSIO_ABI( eosdacrandom, (setsize) (sendseed) (sendhash) (regrequest) )
+EOSIO_ABI( eosdacrandom, (setsize) (setreserved) (sendseed) (sendhash) (regrequest) )

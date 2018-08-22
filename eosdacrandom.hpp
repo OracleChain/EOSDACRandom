@@ -55,6 +55,9 @@ public:
     void setsize(uint64_t size);
 
     // @abi action
+    void setreserved(vector<name> dfs);
+
+    // @abi action
     void sendseed(name datafeeder, int64_t seed);
 
     // @abi action
