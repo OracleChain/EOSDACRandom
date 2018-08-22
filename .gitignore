@@ -1,5 +1,2 @@
 .idea/
 .vscode/
-*.abi
-*.wast
-*.wasm
