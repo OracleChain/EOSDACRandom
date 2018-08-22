@@ -41,17 +41,14 @@ void eosdacrandom::setsize(uint64_t size)
     }
 }
 
-void eosdacrandom::sendseed(name datafeeder, int64_t seed, string sym)
+void eosdacrandom::sendseed(name datafeeder, int64_t seed)
 {
-    eosio_assert(is_account(datafeeder), "Invalid account");
-    symbol_type symbol(string_to_symbol(4, sym.c_str()));
-    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(datafeeder, symbol.name());
-    eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
-
-    eosio::asset selfBalance = eosdactoken(N(eosdactoken)).get_balance(_self, symbol.name());
-    eosio_assert(selfBalance.amount > 0, "contract account has not enough OCT to do it");
-
     require_auth(datafeeder);
+
+    name n;
+    n.value = _self;
+    bool df_validate = oracleserver(tokenContract).datafeedervalidate(datafeeder, n);
+    eosio_assert(df_validate, "data feeder is not registered to oracleserver");
 
     seedconfig_table config(_self, _self);
     auto existing = config.find(_self);
@@ -73,7 +70,6 @@ void eosdacrandom::sendseed(name datafeeder, int64_t seed, string sym)
     string h = cal_sha256_str(seed);
     eosio_assert(sd->seed != seed, "you have already send seed");
     if (sd->hash != h) {
-        //SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, datafeeder, selfBalance, false} );
         for (auto itr = seeds.cbegin(); itr != seeds.cend(); ) {
             itr = seeds.erase(itr);
         }
@@ -98,9 +94,14 @@ void eosdacrandom::sendseed(name datafeeder, int64_t seed, string sym)
     }
 }
 
-void eosdacrandom::sendhash(name datafeeder, string hash, string sym)
+void eosdacrandom::sendhash(name datafeeder, string hash)
 {
-    eosio_assert(is_account(datafeeder), "Invalid account");
+    require_auth(datafeeder);
+
+    name n;
+    n.value = _self;
+    bool df_validate = oracleserver(tokenContract).datafeedervalidate(datafeeder, n);
+    eosio_assert(df_validate, "data feeder is not registered to oracleserver");
 
     seedconfig_table config(_self, _self);
     auto existing = config.find(_self);
@@ -108,12 +109,6 @@ void eosdacrandom::sendhash(name datafeeder, string hash, string sym)
     const auto& cfg = *existing;
 
     eosio_assert(cfg.hash_count < cfg.target_size, "seeds is full");
-
-    symbol_type symbol(string_to_symbol(4, sym.c_str()));
-    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(datafeeder, symbol.name());
-    eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
-
-    require_auth(datafeeder);
 
     seed_table seeds(_self, _self);
     auto s = seeds.find(datafeeder);

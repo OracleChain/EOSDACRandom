@@ -55,10 +55,10 @@ public:
     void setsize(uint64_t size);
 
     // @abi action
-    void sendseed(name datafeeder, int64_t seed, string symbol);
+    void sendseed(name datafeeder, int64_t seed);
 
     // @abi action
-    void sendhash(name datafeeder, string hash, string symbol);
+    void sendhash(name datafeeder, string hash);
 
     // @abi action
     void regrequest(name consumer, string orderid);
