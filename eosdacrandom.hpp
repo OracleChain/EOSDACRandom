@@ -10,13 +10,13 @@ using namespace std;
 // @abi table
 struct seed_info
 {
-    name    owner;
+    name    datafeeder;
     int64_t seed;
     string  hash;
 
-    uint64_t primary_key() const { return owner; }
+    uint64_t primary_key() const { return datafeeder; }
 
-    EOSLIB_SERIALIZE( seed_info, (owner) (seed) (hash))
+    EOSLIB_SERIALIZE( seed_info, (datafeeder) (seed) (hash))
 };
 
 typedef eosio::multi_index<N(seeds), seed_info> seed_table;
@@ -33,12 +33,12 @@ struct request_info
 // @abi table
 struct geter_info
 {
-    name                    owner;
+    name                    consumer;
     vector<request_info>    requestinfo;
 
-    uint64_t primary_key() const { return owner; }
+    uint64_t primary_key() const { return consumer; }
 
-    EOSLIB_SERIALIZE( geter_info, (owner) (requestinfo) )
+    EOSLIB_SERIALIZE( geter_info, (consumer) (requestinfo) )
 };
 
 typedef  eosio::multi_index<N(geters), geter_info> geter_table;
@@ -55,10 +55,10 @@ public:
     void setsize(uint64_t size);
 
     // @abi action
-    void sendseed(name owner, int64_t seed, string symbol);
+    void sendseed(name datafeeder, int64_t seed, string symbol);
 
     // @abi action
-    void sendhash(name owner, string hash, string symbol);
+    void sendhash(name datafeeder, string hash, string symbol);
 
     // @abi action
     void regrequest(name consumer, string orderid);
@@ -83,7 +83,9 @@ public:
 private:
     int64_t random();
     bool seedsmatch();
+
     checksum256 cal_sha256(int64_t word);
     string cal_sha256_str(int64_t word);
-    void dispatch_request(name owner);
+
+    void dispatch_request();
 };

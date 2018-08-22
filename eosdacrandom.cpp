@@ -41,17 +41,17 @@ void eosdacrandom::setsize(uint64_t size)
     }
 }
 
-void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
+void eosdacrandom::sendseed(name datafeeder, int64_t seed, string sym)
 {
-    eosio_assert(is_account(owner), "Invalid account");
+    eosio_assert(is_account(datafeeder), "Invalid account");
     symbol_type symbol(string_to_symbol(4, sym.c_str()));
-    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(owner, symbol.name());
+    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(datafeeder, symbol.name());
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
     eosio::asset selfBalance = eosdactoken(N(eosdactoken)).get_balance(_self, symbol.name());
     eosio_assert(selfBalance.amount > 0, "contract account has not enough OCT to do it");
 
-    require_auth(owner);
+    require_auth(datafeeder);
 
     seedconfig_table config(_self, _self);
     auto existing = config.find(_self);
@@ -59,7 +59,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
     const auto& cfg = *existing;
 
     seed_table seeds(_self, _self);
-    const auto& sd = seeds.find(owner);
+    const auto& sd = seeds.find(datafeeder);
     if (cfg.hash_count < cfg.target_size) {
         if (sd != seeds.end()) {
             seeds.erase(sd);
@@ -73,7 +73,7 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
     string h = cal_sha256_str(seed);
     eosio_assert(sd->seed != seed, "you have already send seed");
     if (sd->hash != h) {
-        //SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, owner, selfBalance, false} );
+        //SEND_INLINE_ACTION( eosdacvote, vote, {_self,N(active)}, {_self, datafeeder, selfBalance, false} );
         for (auto itr = seeds.cbegin(); itr != seeds.cend(); ) {
             itr = seeds.erase(itr);
         }
@@ -94,13 +94,13 @@ void eosdacrandom::sendseed(name owner, int64_t seed, string sym)
 
     // if all seeds match
     if (seedsmatch()) {
-        dispatch_request(owner);
+        dispatch_request();
     }
 }
 
-void eosdacrandom::sendhash(name owner, string hash, string sym)
+void eosdacrandom::sendhash(name datafeeder, string hash, string sym)
 {
-    eosio_assert(is_account(owner), "Invalid account");
+    eosio_assert(is_account(datafeeder), "Invalid account");
 
     seedconfig_table config(_self, _self);
     auto existing = config.find(_self);
@@ -110,16 +110,16 @@ void eosdacrandom::sendhash(name owner, string hash, string sym)
     eosio_assert(cfg.hash_count < cfg.target_size, "seeds is full");
 
     symbol_type symbol(string_to_symbol(4, sym.c_str()));
-    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(owner, symbol.name());
+    eosio::asset fromBalance = eosdactoken(N(eosdactoken)).get_balance(datafeeder, symbol.name());
     eosio_assert(fromBalance.amount > 0, "account has not enough OCT to do it");
 
-    require_auth(owner);
+    require_auth(datafeeder);
 
     seed_table seeds(_self, _self);
-    auto s = seeds.find(owner);
+    auto s = seeds.find(datafeeder);
     if (s == seeds.end()) {
         seeds.emplace(_self, [&](auto& a){
-            a.owner = owner;
+            a.datafeeder = datafeeder;
             a.hash = hash;
         });
 
@@ -149,7 +149,7 @@ void eosdacrandom::regrequest(name consumer, string orderid)
     request_info req {orderid, cur};
     if (it == geters.end()) {
         geters.emplace(_self, [&](auto& a){
-            a.owner = consumer;
+            a.consumer = consumer;
             a.requestinfo.push_back(req);
         });
     } else {
@@ -243,7 +243,7 @@ string eosdacrandom::cal_sha256_str(int64_t word)
     return h;
 }
 
-void eosdacrandom::dispatch_request(name owner)
+void eosdacrandom::dispatch_request()
 {
     print("all seeds matched.");
     uint64_t cur = current_time();
@@ -256,7 +256,7 @@ void eosdacrandom::dispatch_request(name owner)
         std:vector<request_info> tmp(i->requestinfo);
         for (auto j = tmp.begin(); j != tmp.end();) {
             if (cur - j->timestamp >= expiraion) {
-                dispatch_inline(i->owner, string_to_name("getrandom"),
+                dispatch_inline(i->consumer, string_to_name("getrandom"),
                                 {permission_level(_self, N(active))},
                                 std::make_tuple(j->index, num));
                 j = tmp.erase(j);
@@ -270,15 +270,6 @@ void eosdacrandom::dispatch_request(name owner)
         }
 
         i = geters.erase(i);
-    }
-
-    if (reqs.size()) {
-        for (auto r = reqs.cbegin(); r != reqs.cend(); ++r) {
-            geters.emplace(_self, [&](auto& a){
-                a.owner = owner;
-                a.requestinfo = *r;
-            });
-        }
     }
 }
 
