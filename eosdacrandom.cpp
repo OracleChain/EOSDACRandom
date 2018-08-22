@@ -258,7 +258,7 @@ void eosdacrandom::dispatch_request()
             if (cur - j->timestamp >= expiraion) {
                 dispatch_inline(i->consumer, string_to_name("getrandom"),
                                 {permission_level(_self, N(active))},
-                                std::make_tuple(j->index, num));
+                                std::make_tuple(j->orderid, num));
                 j = tmp.erase(j);
             } else {
                 ++j;
