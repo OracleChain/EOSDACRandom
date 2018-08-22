@@ -140,13 +140,13 @@ void eosdacrandom::regrequest(name consumer, string orderid)
     // here we should query consumer and orderid from oracleserver for answer, whether the orderid is valid.
     // if true, then go ahead, otherwise it stops.
 
-    bool order_validate = oracleserver(oracleserver).orderidvalidate(consumer, orderid);
+    bool order_validate = oracleserver(tokenContract).orderidvalidate(consumer, orderid);
     eosio_assert(order_validate, "order id is not exist");
 
     geter_table geters(_self, _self);
     auto it = geters.find(consumer);
     uint64_t cur = current_time();
-    request_info req {orderid, cur};
+    request_info req {cur, orderid};
     if (it == geters.end()) {
         geters.emplace(_self, [&](auto& a){
             a.consumer = consumer;

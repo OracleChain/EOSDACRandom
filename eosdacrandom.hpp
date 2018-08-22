@@ -24,10 +24,10 @@ typedef eosio::multi_index<N(seeds), seed_info> seed_table;
 // @abi table
 struct request_info
 {
-    string orderid;
-    uint64_t timestamp;
+    uint64_t    timestamp;
+    string      orderid;
 
-    EOSLIB_SERIALIZE( request_info, (orderid) (timestamp) )
+    EOSLIB_SERIALIZE( request_info, (timestamp) (orderid) )
 };
 
 // @abi table
@@ -79,6 +79,8 @@ public:
     };
 
     typedef eosio::multi_index<N(seedconfig), seedconfig> seedconfig_table;
+
+    static const uint64_t tokenContract = N(oracleserver);
 
 private:
     int64_t random();
