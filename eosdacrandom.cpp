@@ -6,8 +6,6 @@
 #include "../eosdactoken/eosdactoken.hpp"
 #include "../oracleserver/oracleserver.hpp"
 
-using namespace eosio;
-
 eosdacrandom::eosdacrandom(account_name name)
         : contract(name)
 {
