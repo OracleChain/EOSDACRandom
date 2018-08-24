@@ -80,8 +80,10 @@ void eosdacrandom::sendseed(name datafeeder, int64_t seed)
 
     name n;
     n.value = _self;
-    bool df_validate = oracleserver(tokenContract).datafeedervalidate(datafeeder, n);
-    eosio_assert(df_validate, "data feeder is not registered to oracleserver");
+
+    dfreg_table dfregs(N(oracleserver), datafeeder);
+    auto df_existing = dfregs.find(n);
+    eosio_assert(df_existing != dfregs.end(), "data feeder is not registered to oracleserver");
 
     seedconfig_table config(_self, _self);
     auto existing = config.find(_self);
