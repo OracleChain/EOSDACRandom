@@ -57,8 +57,9 @@ void eosdacrandom::setreserved(vector<name> dfs)
     name n;
     n.value = _self;
     for (const auto& df : dfs) {
-        bool df_validate = oracleserver(tokenContract).datafeedervalidate(df, n);
-        eosio_assert(df_validate, "data feeder must register first");
+        dfreg_table dfregs(N(oracleserver), df);
+        auto df_existing = dfregs.find(n);
+        eosio_assert(df_existing != dfregs.end(), "data feeder must register first");
 
         auto sd = seeds.find(df);
         if (sd == seeds.end()) {
