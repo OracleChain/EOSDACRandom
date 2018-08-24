@@ -52,9 +52,10 @@ A random number generator smart contract.
 #### example
 
 ```
-cleos create account eosio eosdactoken EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+$ cleos create account eosio eosdactoken EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 
-cleos create account eosio eosdacrandom EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+$ cleos system newaccount eosio eosdacrandom EOS62wJ1teiN23sdB2ynQE2za715FRwuXC7XN5xa1hu16QLs8EkV9 EOS62wJ1teiN23sdB2ynQE2za715FRwuXC7XN5xa1hu16QLs8EkV9 --stake-cpu "1.0000 SYS" --stake-net "1.0000 SYS" --buy-ram "1.0000 SYS"
+
 cleos set account permission eosdacrandom active '{"threshold": 1,"keys": [{"key": "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","weight": 1}],"accounts": [{"permission":{"actor":"eosdacrandom","permission":"eosio.code"},"weight":1}]}' owner -p eosdacrandom
 
 cleos create account eosio requester EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
