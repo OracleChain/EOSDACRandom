@@ -74,6 +74,8 @@ $ cleos push action octtothemoon create '["octtothemoon", "100000000.0000 OCT"]'
 
 $ cleos push action octtothemoon issue '["octtothemoon", "100000000.0000 OCT"]' -p octtothemoon
 
+$ cleos push action oracleserver registerorc '["eosdacrandom", "random", 10, 10]' -p oracleserver
+
 cleos push action eosdactoken transfer '["eosdactoken", "eosdacrandom", "1000.0000 OCT", ""]' -p eosdactoken
 
 cleos push action eosdactoken transfer '["eosdactoken", "requester", "1.0000 OCT", ""]' -p eosdactoken
