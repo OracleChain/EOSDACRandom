@@ -66,11 +66,11 @@ cleos create account eosio seeder2 EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqE
 
 cleos create account eosio seeder3 EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 
-cleos set contract eosdactoken ./eosdactoken -p eosdactoken
+$ cleos set contract octtothemoon ./ eosdactoken.wasm eosdactoken.abi
 
-cleos push action eosdactoken create '["eosdactoken", "1000000000.0000 OCT"]' -p eosdactoken
+$ cleos push action octtothemoon create '["octtothemoon", "100000000.0000 OCT"]' -p octtothemoon
 
-cleos push action eosdactoken issue '["eosdactoken", "1000000000.0000 OCT"]' -p eosdactoken
+$ cleos push action octtothemoon issue '["octtothemoon", "100000000.0000 OCT"]' -p octtothemoon
 
 cleos push action eosdactoken transfer '["eosdactoken", "eosdacrandom", "1000.0000 OCT", ""]' -p eosdactoken
 
