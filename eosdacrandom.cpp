@@ -133,8 +133,10 @@ void eosdacrandom::sendhash(name datafeeder, string hash)
 
     name n;
     n.value = _self;
-    bool df_validate = oracleserver(tokenContract).datafeedervalidate(datafeeder, n);
-    eosio_assert(df_validate, "data feeder is not registered to oracleserver");
+
+    dfreg_table dfregs(N(oracleserver), datafeeder);
+    auto df_existing = dfregs.find(n);
+    eosio_assert(df_existing != dfregs.end(), "data feeder is not registered to oracleserver");
 
     seedconfig_table config(_self, _self);
     auto existing = config.find(_self);
@@ -168,8 +170,14 @@ void eosdacrandom::regrequest(name consumer, string orderid)
     // here we should query consumer and orderid from oracleserver for answer, whether the orderid is valid.
     // if true, then go ahead, otherwise it stops.
 
-    bool order_validate = oracleserver(tokenContract).orderidvalidate(consumer, orderid);
-    eosio_assert(order_validate, "order id is not exist");
+    order_table orders(N(oracleserver), consumer);
+    bool found = false;
+    for (const auto& o : orders) {
+        if (o.orderid == orderid) {
+            found = true;
+        }
+    }
+    eosio_assert(found, "order id is not exist");
 
     geter_table geters(_self, _self);
     auto it = geters.find(consumer);

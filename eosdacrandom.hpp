@@ -83,8 +83,6 @@ public:
 
     typedef eosio::multi_index<N(seedconfig), seedconfig> seedconfig_table;
 
-    static const uint64_t tokenContract = N(oracleserver);
-
 private:
     int64_t random();
     bool seedsmatch();
