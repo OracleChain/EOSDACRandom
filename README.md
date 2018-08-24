@@ -52,7 +52,7 @@ A random number generator smart contract.
 #### example
 
 ```
-$ cleos create account eosio eosdactoken EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+$ cleos system newaccount eosio octtothemoon EOS6RLatEKdW3LGZ4Kfftf7xAEmqVkkFjsjG4uEefuatSZyDLk261 EOS6RLatEKdW3LGZ4Kfftf7xAEmqVkkFjsjG4uEefuatSZyDLk261 --stake-cpu "1.0000 SYS" --stake-net "1.0000 SYS" --buy-ram "1.0000 SYS"
 
 $ cleos system newaccount eosio eosdacrandom EOS62wJ1teiN23sdB2ynQE2za715FRwuXC7XN5xa1hu16QLs8EkV9 EOS62wJ1teiN23sdB2ynQE2za715FRwuXC7XN5xa1hu16QLs8EkV9 --stake-cpu "1.0000 SYS" --stake-net "1.0000 SYS" --buy-ram "1.0000 SYS"
 
