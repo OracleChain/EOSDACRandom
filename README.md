@@ -52,9 +52,10 @@ A random number generator smart contract.
 #### example
 
 ```
-cleos create account eosio eosdactoken EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+$ cleos system newaccount eosio octtothemoon EOS6RLatEKdW3LGZ4Kfftf7xAEmqVkkFjsjG4uEefuatSZyDLk261 EOS6RLatEKdW3LGZ4Kfftf7xAEmqVkkFjsjG4uEefuatSZyDLk261 --stake-cpu "1.0000 SYS" --stake-net "1.0000 SYS" --buy-ram "1.0000 SYS"
 
-cleos create account eosio eosdacrandom EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+$ cleos system newaccount eosio eosdacrandom EOS62wJ1teiN23sdB2ynQE2za715FRwuXC7XN5xa1hu16QLs8EkV9 EOS62wJ1teiN23sdB2ynQE2za715FRwuXC7XN5xa1hu16QLs8EkV9 --stake-cpu "1.0000 SYS" --stake-net "1.0000 SYS" --buy-ram "1.0000 SYS"
+
 cleos set account permission eosdacrandom active '{"threshold": 1,"keys": [{"key": "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","weight": 1}],"accounts": [{"permission":{"actor":"eosdacrandom","permission":"eosio.code"},"weight":1}]}' owner -p eosdacrandom
 
 cleos create account eosio requester EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
@@ -65,11 +66,11 @@ cleos create account eosio seeder2 EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqE
 
 cleos create account eosio seeder3 EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 
-cleos set contract eosdactoken ./eosdactoken -p eosdactoken
+$ cleos set contract octtothemoon ./ eosdactoken.wasm eosdactoken.abi
 
-cleos push action eosdactoken create '["eosdactoken", "1000000000.0000 OCT"]' -p eosdactoken
+$ cleos push action octtothemoon create '["octtothemoon", "100000000.0000 OCT"]' -p octtothemoon
 
-cleos push action eosdactoken issue '["eosdactoken", "1000000000.0000 OCT"]' -p eosdactoken
+$ cleos push action octtothemoon issue '["octtothemoon", "100000000.0000 OCT"]' -p octtothemoon
 
 cleos push action eosdactoken transfer '["eosdactoken", "eosdacrandom", "1000.0000 OCT", ""]' -p eosdactoken
 
