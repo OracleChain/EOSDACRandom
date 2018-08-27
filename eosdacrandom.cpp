@@ -295,7 +295,7 @@ void eosdacrandom::dispatch_request()
         std:vector<request_info> tmp(i->requestinfo);
         for (auto j = tmp.begin(); j != tmp.end();) {
             if (cur - j->timestamp >= expiraion) {
-                dispatch_inline(i->consumer, string_to_name("getrandom"),
+                dispatch_inline(i->consumer, string_to_name("genrandom"),
                                 {permission_level(_self, N(active))},
                                 std::make_tuple(j->orderid, num));
                 j = tmp.erase(j);

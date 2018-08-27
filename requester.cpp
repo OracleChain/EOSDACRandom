@@ -6,7 +6,7 @@ public:
 	using contract::contract;
 
 	// @abi action
-	void getrandom(string orderid, uint64_t num) {
+	void genrandom(string orderid, uint64_t num) {
 		print("Order id: ");
 		print(orderid);
 		print("Random number: ");
@@ -14,4 +14,4 @@ public:
 	}
 };
 
-EOSIO_ABI( requester, (getrandom) )
+EOSIO_ABI( requester, (genrandom) )
