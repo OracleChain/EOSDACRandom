@@ -81,7 +81,7 @@
  (data (i32.const 896) "hash size not fulled\00")
  (data (i32.const 928) "you have already send seed\00")
  (data (i32.const 960) "all seeds matched.\00")
- (data (i32.const 992) "getrandom\00")
+ (data (i32.const 992) "genrandom\00")
  (data (i32.const 1008) "active\00")
  (data (i32.const 1024) "object passed to erase is not in multi_index\00")
  (data (i32.const 1072) "cannot erase objects in table of another contract\00")
