@@ -8,7 +8,7 @@ using namespace eosio;
 using namespace std;
 
 // @abi table
-struct seed_info
+struct seedinfo
 {
     name    datafeeder;
     int64_t seed;
@@ -16,32 +16,32 @@ struct seed_info
 
     uint64_t primary_key() const { return datafeeder; }
 
-    EOSLIB_SERIALIZE( seed_info, (datafeeder) (seed) (hash))
+    EOSLIB_SERIALIZE( seedinfo, (datafeeder) (seed) (hash))
 };
 
-typedef eosio::multi_index<N(seeds), seed_info> seed_table;
+typedef eosio::multi_index<N(seedinfo), seedinfo> seed_table;
 
 // @abi table
-struct request_info
+struct requestinfo
 {
     uint64_t    timestamp;
     string      orderid;
 
-    EOSLIB_SERIALIZE( request_info, (timestamp) (orderid) )
+    EOSLIB_SERIALIZE( requestinfo, (timestamp) (orderid) )
 };
 
 // @abi table
-struct geter_info
+struct geterinfo
 {
     name                    consumer;
-    vector<request_info>    requestinfo;
+    vector<requestinfo>     requestinfos;
 
     uint64_t primary_key() const { return consumer; }
 
-    EOSLIB_SERIALIZE( geter_info, (consumer) (requestinfo) )
+    EOSLIB_SERIALIZE( geterinfo, (consumer) (requestinfos) )
 };
 
-typedef  eosio::multi_index<N(geters), geter_info> geter_table;
+typedef  eosio::multi_index<N(geterinfo), geterinfo> geter_table;
 
 // void getrandom(string orderid, int64_t number) {}
 

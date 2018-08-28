@@ -185,16 +185,16 @@ void eosdacrandom::regrequest(name consumer, string orderid)
     geter_table geters(_self, _self);
     auto it = geters.find(consumer);
     uint64_t cur = current_time();
-    request_info req {cur, orderid};
+    requestinfo req {cur, orderid};
     if (it == geters.end()) {
         geters.emplace(_self, [&](auto& a){
             a.consumer = consumer;
-            a.requestinfo.push_back(req);
+            a.requestinfos.push_back(req);
         });
     } else {
         geters.modify(it, _self, [&](auto& a){
             bool same_order = false;
-            for (auto ri = a.requestinfo.begin(); ri != a.requestinfo.end(); ++ri) {
+            for (auto ri = a.requestinfos.begin(); ri != a.requestinfos.end(); ++ri) {
                 if (ri->orderid == orderid) {    // if orderid equals former orderid.
                     *ri = req;
                     same_order = true;
@@ -203,7 +203,7 @@ void eosdacrandom::regrequest(name consumer, string orderid)
             }
 
             if (!same_order) {
-                a.requestinfo.push_back(req);
+                a.requestinfos.push_back(req);
             }
         });
     }
@@ -288,11 +288,11 @@ void eosdacrandom::dispatch_request()
     uint64_t cur = current_time();
     int64_t num = random();
     static int expiraion = 3000; // ms
-    std::vector<std::vector<request_info>> reqs;
+    std::vector<std::vector<requestinfo>> reqs;
 
     geter_table geters(_self, _self);
     for (auto i = geters.cbegin(); i != geters.cend();) {
-        std:vector<request_info> tmp(i->requestinfo);
+        auto tmp = i->requestinfos;
         for (auto j = tmp.begin(); j != tmp.end();) {
             if (cur - j->timestamp >= expiraion) {
                 dispatch_inline(i->consumer, string_to_name("genrandom"),
