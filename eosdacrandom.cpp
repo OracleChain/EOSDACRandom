@@ -3,7 +3,6 @@
 #include <eosiolib/stdlib.hpp>
 #include <eosiolib/action.hpp>
 #include <eosiolib/symbol.hpp>
-#include "../eosdactoken/eosdactoken.hpp"
 #include "../oracleserver/oracleserver.hpp"
 
 eosdacrandom::eosdacrandom(account_name name)
@@ -75,7 +74,7 @@ void eosdacrandom::setreserved(vector<name> dfs)
     }
 }
 
-void eosdacrandom::sendseed(name datafeeder, int64_t seed)
+void eosdacrandom::sendseed(name datafeeder, string seed)
 {
     require_auth(datafeeder);
 
@@ -209,7 +208,7 @@ void eosdacrandom::regrequest(name consumer, string orderid)
     }
 }
 
-int64_t eosdacrandom::random()
+string eosdacrandom::one_seed()
 {
     // use seeds to generate random number
     seedconfig_table config(_self, _self);
@@ -218,7 +217,7 @@ int64_t eosdacrandom::random()
     eosio_assert(existing->hash_count == existing->target_size, "seed is not full");
 
     // how to generate random number?
-    int64_t  seed = 0;
+    string  seed;
     seed_table seeds(_self, _self);
     for (auto it = seeds.cbegin(); it != seeds.cend();) {
         seed += it->seed;
@@ -230,15 +229,7 @@ int64_t eosdacrandom::random()
         c.seed_match = 0;
     });
 
-    checksum256 cs = cal_sha256(seed);
-    return (((int64_t)cs.hash[0] << 56 ) & 0xFF00000000000000U)
-        |  (((int64_t)cs.hash[1] << 48 ) & 0x00FF000000000000U)
-        |  (((int64_t)cs.hash[2] << 40 ) & 0x0000FF0000000000U)
-        |  (((int64_t)cs.hash[3] << 32 ) & 0x000000FF00000000U)
-        |  ((cs.hash[4] << 24 )          & 0x00000000FF000000U)
-        |  ((cs.hash[5] << 16 )          & 0x0000000000FF0000U)
-        |  ((cs.hash[6] << 8 )           & 0x000000000000FF00U)
-        |  (cs.hash[7]                   & 0x00000000000000FFU);
+    return seed;
 }
 
 bool eosdacrandom::seedsmatch()
@@ -259,20 +250,30 @@ bool eosdacrandom::seedsmatch()
     return false;
 }
 
-checksum256 eosdacrandom::cal_sha256(int64_t word)
-{
-    checksum256 cs = { 0 };
-    char d[255] = { 0 };
-    snprintf(d, sizeof(d) - 1, "%lld", word);
-    sha256(d, strlen(d), &cs);
-
-    return cs;
-}
-
-string eosdacrandom::cal_sha256_str(int64_t word)
+string eosdacrandom::cal_sha256_str(string seed)
 {
     string h;
-    checksum256 cs = cal_sha256(word);
+    char d[255] = { 0 };
+    snprintf(d, sizeof(d) - 1, "%s", seed.c_str());
+    checksum256 cs = { 0 };
+    sha256(d, strlen(d), &cs);
+    for (int i = 0; i < sizeof(cs.hash); ++i) {
+        char hex[3] = { 0 };
+        snprintf(hex, sizeof(hex), "%02x", static_cast<unsigned char>(cs.hash[i]));
+        h += hex;
+    }
+
+    return h;
+}
+
+string eosdacrandom::make_sha256_str(int index, string orderid, string seed)
+{
+    string h;
+    char str[255] = { 0 };
+    snprintf(str, sizeof(str), "%d%s%s", index, orderid.c_str(), seed.c_str());
+    checksum256 cs = { 0 };
+    sha256(str, strlen(str), &cs);
+
     for (int i = 0; i < sizeof(cs.hash); ++i) {
         char hex[3] = { 0 };
         snprintf(hex, sizeof(hex), "%02x", static_cast<unsigned char>(cs.hash[i]));
@@ -286,18 +287,20 @@ void eosdacrandom::dispatch_request()
 {
     print("all seeds matched.");
     uint64_t cur = current_time();
-    int64_t num = random();
+    string seed = one_seed();
     static int expiraion = 3000; // ms
     std::vector<std::vector<requestinfo>> reqs;
 
     geter_table geters(_self, _self);
     for (auto i = geters.cbegin(); i != geters.cend();) {
         auto tmp = i->requestinfos;
+        int index = 0;
         for (auto j = tmp.begin(); j != tmp.end();) {
             if (cur - j->timestamp >= expiraion) {
-                dispatch_inline(i->consumer, string_to_name("genrandom"),
+                string random = make_sha256_str(index++, j->orderid, seed);
+                dispatch_inline(i->consumer, N(genrandom),
                                 {permission_level(_self, N(active))},
-                                std::make_tuple(j->orderid, num));
+                                std::make_tuple(j->orderid, random));
                 j = tmp.erase(j);
             } else {
                 ++j;

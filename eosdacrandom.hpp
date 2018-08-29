@@ -11,10 +11,10 @@ using namespace std;
 struct seedinfo
 {
     name    datafeeder;
-    int64_t seed;
+    string  seed;
     string  hash;
 
-    uint64_t primary_key() const { return datafeeder; }
+    uint64_t primary_key() const { return datafeeder.value; }
 
     EOSLIB_SERIALIZE( seedinfo, (datafeeder) (seed) (hash))
 };
@@ -36,7 +36,7 @@ struct geterinfo
     name                    consumer;
     vector<requestinfo>     requestinfos;
 
-    uint64_t primary_key() const { return consumer; }
+    uint64_t primary_key() const { return consumer.value; }
 
     EOSLIB_SERIALIZE( geterinfo, (consumer) (requestinfos) )
 };
@@ -58,7 +58,7 @@ public:
     void setreserved(vector<name> dfs);
 
     // @abi action
-    void sendseed(name datafeeder, int64_t seed);
+    void sendseed(name datafeeder, string seed);
 
     // @abi action
     void sendhash(name datafeeder, string hash);
@@ -84,11 +84,12 @@ public:
     typedef eosio::multi_index<N(seedconfig), seedconfig> seedconfig_table;
 
 private:
-    int64_t random();
+    string one_seed();
     bool seedsmatch();
 
-    checksum256 cal_sha256(int64_t word);
-    string cal_sha256_str(int64_t word);
+    checksum256 cal_sha256(int index, string orderid, string seed);
+    string cal_sha256_str(string word);
+    string make_sha256_str(int index, string orderid, string seed);
 
     void dispatch_request();
 };
