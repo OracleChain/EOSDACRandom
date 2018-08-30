@@ -87,7 +87,6 @@ private:
     string one_seed();
     bool seedsmatch();
 
-    checksum256 cal_sha256(int index, string orderid, string seed);
     string cal_sha256_str(string word);
     string make_sha256_str(int index, string orderid, string seed);
 
