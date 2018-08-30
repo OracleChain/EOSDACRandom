@@ -125,7 +125,24 @@ void eosdacrandom::sendseed(name datafeeder, string seed)
 
     // if all seeds match
     if (seedsmatch()) {
+        // commit random to consumer.
         dispatch_request();
+
+        vector<feedback> fbs;
+        for (auto itr = seeds.begin(); itr != seeds.end(); ++itr) {
+            // unfreeze datafeeder's stake balance.
+            dispatch_inline(N(oracleserver), N(unfreezedf),
+                                {permission_level(_self, N(active))},
+                                std::make_tuple(_self, itr->datafeeder, asset(100000, S(4,OCT))));
+
+            feedback fb{itr->datafeeder, asset(10000, S(4,OCT)), 1};
+            fbs.push_back(fb);
+        }
+
+        // feedback about datafeeders.
+        dispatch_inline(N(oracleserver), N(feedbackdf),
+                                {permission_level(_self, N(active))},
+                                std::make_tuple(_self, fbs));
     }
 }
 
