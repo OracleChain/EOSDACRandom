@@ -7136,6 +7136,10 @@
       )
       (i64.const 0)
      )
+     (i64.store offset=24
+      (get_local $11)
+      (i64.const 0)
+     )
      (set_local $17
       (i64.load
        (get_local $11)
