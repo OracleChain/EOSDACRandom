@@ -105,11 +105,13 @@ void eosdacrandom::sendseed(name datafeeder, string seed)
     string h = cal_sha256_str(seed);
     eosio_assert(sd->seed != seed, "you have already send seed");
     if (sd->hash != h) {
+        // datafeeder is evil, kick him out, whole procedure start over.
         for (auto itr = seeds.cbegin(); itr != seeds.cend(); ) {
             itr = seeds.erase(itr);
         }
         config.modify(cfg, _self, [&](auto& c){
             c.hash_count = 0;
+            c.seed_match = 0;
         });
         return;
     }
