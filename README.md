@@ -1,7 +1,7 @@
 # EOSDACRandom
 A random number generator smart contract.
 
-##warning
+## warning
 ```
 EOSDACRandom is related to oracleserver, an oracle market contract implemented by oraclechain, which
 currently not open-sourced. Therefore building this project would be failed, the suggestion is remove 
